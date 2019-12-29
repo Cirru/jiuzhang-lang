@@ -1,0 +1,9 @@
+
+{:pom {:group-id "mvc-works",
+       :artifact-id "calcit-workflow",
+       :version "0.1.0",
+       :name "Workflow"}
+ :packaging {:jar {:enabled true
+                   :remote-repository {:id "clojars"
+                                       :url "https://clojars.org/repo"}}}
+ :scm {:enabled true}}
