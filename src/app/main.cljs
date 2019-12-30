@@ -15,7 +15,8 @@
   (atom (-> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store))))
 
 (defn dispatch! [op op-data]
-  (when config/dev? (println "Dispatch:" op op-data))
+  (when (and config/dev? (not= op :hydrate-storage) (not= op :states))
+    (println "Dispatch:" op))
   (reset! *reel (reel-updater updater @*reel op op-data)))
 
 (def mount-target (.querySelector js/document ".app"))

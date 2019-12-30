@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@mvc-works/codearea@^0.0.1-a1":
-  version "0.0.1-a1"
-  resolved "https://registry.npm.taobao.org/@mvc-works/codearea/download/@mvc-works/codearea-0.0.1-a1.tgz#b7ae1cb612d52d3dcb7f8fc9845ad1eb33584137"
-  integrity sha1-t64cthLVLT3Lf4/JhFrR6zNYQTc=
+"@mvc-works/codearea@^0.0.1-a2":
+  version "0.0.1-a2"
+  resolved "https://registry.npm.taobao.org/@mvc-works/codearea/download/@mvc-works/codearea-0.0.1-a2.tgz#3f8c8a00f8eacb933379f90bf4645857cd22d3f1"
+  integrity sha1-P4yKAPjqy5MzefkL9GRYV80i0/E=
 
 asn1.js@^4.0.0:
   version "4.10.1"
@@ -497,6 +497,11 @@ node-libs-browser@^2.0.0:
     url "^0.11.0"
     util "^0.11.0"
     vm-browserify "^1.0.1"
+
+nzh@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.npm.taobao.org/nzh/download/nzh-1.0.4.tgz#bded5492cd7148fa5fe1c809fa61932a899769c5"
+  integrity sha1-ve1Uks1xSPpf4cgJ+mGTKomXacU=
 
 object-assign@^4.1.1:
   version "4.1.1"

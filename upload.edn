@@ -1,6 +1,6 @@
 
 {:host "tiye.me"
  :uploads [{:from "dist/*"
-            :to "cdn/calcit-workflow/"}
+            :to "cdn/jiuzhang-lang/"}
            {:from "dist/{index.html,manifest.json}"
-            :to "repo/mvc-works/calcit-workflow/"}]}
+            :to "repo/Cirru/jiuzhang-lang/"}]}
