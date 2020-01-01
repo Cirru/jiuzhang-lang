@@ -41,7 +41,9 @@ jiuzhang demo.cirru
 变量定义:
 
 ```cirru
+有 甲 三十三
 今有 甲 三十三
+又有 甲 三十三
 ```
 
 示以数据:
