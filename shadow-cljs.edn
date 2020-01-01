@@ -54,5 +54,9 @@
       :target :node-script, :output-to "target/counting.js", :main app.counting/main!
       :devtools {:after-load app.counting/main!}
     }
+    :test {
+      :target :node-test, :output-to "target/test.js", :ns-regexp "test$"
+      :autorun true
+    }
   }
 }

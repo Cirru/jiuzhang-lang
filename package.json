@@ -4,7 +4,7 @@
   "description": "ClojureScript workflow using Calcit Editor",
   "main": "index.js",
   "scripts": {
-    "watch": "shadow-cljs watch client counting cli",
+    "watch": "shadow-cljs watch client counting cli test",
     "serve": "http-server dist -s",
     "build-cdn": "rm -rfv dist/* && shadow-cljs clj-run build.main/build-cdn",
     "build": "shadow-cljs clj-run build.main/build",

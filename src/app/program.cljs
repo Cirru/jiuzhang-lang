@@ -24,6 +24,10 @@
 
 (declare call-add)
 
+(defn call-defn [body *scope stdout stderr] (println "TODO"))
+
+(defn call-fn [body *scope stdout stderr] (println "TODO"))
+
 (defn flat-map-structure? [xs] (every? string? (take-nth 2 xs)))
 
 (def simple-str-pattern #"[\u4e00-\u9fa5\w\d_\-=\+\?\!\|\.%]+")
@@ -53,6 +57,7 @@
   (comment println "reading literal" token @*scope)
   (cond
     (= (first token) "|") (subs token 1)
+    (= (first token) ":") (subs token 1)
     (re-matches number-pattern token) (nzh/decodeS token)
     (contains? @*scope token) (get @*scope token)
     :else (do (stderr "未知几何也" (pr-str token) "\n") nil)))
@@ -68,8 +73,7 @@
    (->> xs
         (map (fn [x] (call-expression x *scope stdout stderr)))
         (map (fn [x] (format-value x)))
-        (string/join " "))
-   "\n"))
+        (string/join " "))))
 
 (defn call-negate [x *scope stdout stderr]
   (let [v (call-expression x *scope stdout stderr)] (- v)))
@@ -104,9 +108,7 @@
              (fn [pair]
                (when-not (= 2 (count pair))
                  (stderr "Invalid length" (count pair) "of" (pr-str pair)))
-               (->> pair
-                    (map (fn [x] (println "x" x) (call-expression x *scope stdout stderr)))
-                    (vec))))
+               (->> pair (map (fn [x] (call-expression x *scope stdout stderr))) (vec))))
             (into {})))
     :else (do (stderr "Unknown structure of map" (pr-str xs) "\n") nil)))
 
@@ -124,6 +126,7 @@
               "令" (call-define x1 x2 *scope stdout stderr)
               "答曰" (call-println body *scope stdout stderr)
               "得" (call-println body *scope stdout stderr)
+              "又得" (call-println body *scope stdout stderr)
               "列" (call-vector body *scope stdout stderr)
               "置" (call-hashmap body *scope stdout stderr)
               "并" (call-add body *scope stdout stderr)
@@ -132,7 +135,11 @@
               "除" (call-divide body *scope stdout stderr)
               "自乘" (call-self-multiply x1 *scope stdout stderr)
               "负" (call-negate x1 *scope stdout stderr)
+              "术曰" (call-defn body *scope stdout stderr)
+              "术" (call-fn body *scope stdout stderr)
               "按" nil
+              "案" nil
+              "又按" nil
               (stderr "未有术也, 不知" (pr-str head)))
           (vector? head) (stderr "未有术也, 不知" (pr-str head))
           :else (stderr "未知几何也" (pr-str expr))))
@@ -160,4 +167,6 @@
 
 (defn run-program [source stdout stderr]
   (let [instructions (parse source), *scope (atom {})]
-    (doseq [expr instructions] (call-expression expr *scope stdout stderr))))
+    (if (= instructions [[]])
+      (do)
+      (doseq [expr instructions] (call-expression expr *scope stdout stderr)))))

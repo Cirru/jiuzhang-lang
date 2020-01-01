@@ -38,8 +38,8 @@
          :on-click (fn [e d! m!]
            (let [*result (atom "")
                  *error-result (atom "")
-                 stdout (fn [& xs] (swap! *result str (string/join " " xs)))
-                 stderr (fn [& xs] (swap! *error-result str (string/join " " xs)))]
+                 stdout (fn [& xs] (swap! *result str (string/join " " xs) "\n"))
+                 stderr (fn [& xs] (swap! *error-result str (string/join " " xs) "\n"))]
              (run-program (:content store) stdout stderr)
              (println ":result" @*result)
              (js/console.error @*error-result)
