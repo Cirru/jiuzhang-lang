@@ -1,8 +1,21 @@
 
-九章编程(jiuzheng dialect)
+九章编程(jiuzhang dialect)
 ----
 
-> Toy project of mimicing Ancient Chinese programming. Based on Cirru project.
+> Toy project of mimicing Ancient Chinese programming. Based on Cirru project. Learning from [The Nine Chapters on the Mathematical Art](https://en.wikipedia.org/wiki/The_Nine_Chapters_on_the_Mathematical_Art).
+
+Previews http://repo.cirru.org/jiuzhang-lang/
+
+### Usage
+
+```bash
+yarn global add @cirru/jiuzhang
+
+jiuzhang demo.cirru
+
+# 或者 9c(nine chapters)
+9c demo.cirru
+```
 
 ### Examples
 
@@ -27,7 +40,7 @@
 
 变量定义:
 
-```clojure
+```cirru
 今有 甲 三十三
 ```
 
@@ -99,12 +112,6 @@
 ```
 求, 取
 ```
-
-### Usage
-
-TODO
-
-在线示例 http://repo.cirru.org/jiuzhang-lang/
 
 ### Workflow
 

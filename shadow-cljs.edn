@@ -39,6 +39,13 @@
         :build-options {:manifest-name "assets.edn"}
       }
     }
+    :cli {
+      :target :node-script, :output-to "target/cli.js", :main app.cli/main!
+      :devtools {:after-load app.cli/main!}
+      :release {
+        :output-to "dist/cli.js"
+      }
+    }
     :page {
       :target :node-script, :output-to "target/page.js", :main app.page/main!
       :devtools {:after-load app.page/main!}

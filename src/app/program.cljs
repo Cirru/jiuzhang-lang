@@ -1,5 +1,6 @@
 
-(ns app.program (:require ["nzh/cn" :as nzh] [clojure.string :as string]))
+(ns app.program
+  (:require ["nzh/cn" :as nzh] [clojure.string :as string] [cirru-parser.core :refer [parse]]))
 
 (declare call-println)
 
@@ -36,76 +37,70 @@
 
 (def number-pattern #"[一二三四五六七八九零十百千万亿负点]+")
 
-(defn resolve-literal [token *scope wrap-print]
-  (println "reading literal" token @*scope)
+(defn resolve-literal [token *scope stdout stderr]
+  (comment println "reading literal" token @*scope)
   (cond
     (= (first token) "|") (subs token 1)
     (re-matches number-pattern token) (nzh/decodeS token)
     (contains? @*scope token) (get @*scope token)
-    :else (do (wrap-print "未知几何也" (pr-str token) "\n") nil)))
+    :else (do (stderr "未知几何也" (pr-str token) "\n") nil)))
 
-(defn call-vector [xs *scope wrap-print]
-  (->> xs (map (fn [x] (call-expression x *scope wrap-print))) (into [])))
+(defn call-vector [xs *scope stdout stderr]
+  (->> xs (map (fn [x] (call-expression x *scope stdout stderr))) (into [])))
 
-(defn call-println [xs *scope wrap-print]
-  (wrap-print
+(defn call-println [xs *scope stdout stderr]
+  (stdout
    (->> xs
-        (map (fn [x] (call-expression x *scope wrap-print)))
+        (map (fn [x] (call-expression x *scope stdout stderr)))
         (map (fn [x] (format-value x)))
         (string/join " "))
    "\n"))
 
-(defn call-hashmap [xs *scope wrap-print]
+(defn call-hashmap [xs *scope stdout stderr]
   (cond
     (every? vector? xs)
       (->> xs
            (map
             (fn [pair]
               (when-not (= 2 (count pair))
-                (wrap-print "Invalid length" (count pair) "of" (pr-str pair)))
-              (->> pair
-                   (map (fn [x] (println "x" x) (call-expression x *scope wrap-print)))
-                   (vec))))
+                (stderr "Invalid length" (count pair) "of" (pr-str pair)))
+              (->> pair (map (fn [x] (call-expression x *scope stdout stderr))) (vec))))
            (into {}))
     (and (even? (count xs)) (flat-map-structure? xs))
       ((->> (partition 2 xs)
             (map
              (fn [pair]
                (when-not (= 2 (count pair))
-                 (wrap-print "Invalid length" (count pair) "of" (pr-str pair)))
+                 (stderr "Invalid length" (count pair) "of" (pr-str pair)))
                (->> pair
-                    (map (fn [x] (println "x" x) (call-expression x *scope wrap-print)))
+                    (map (fn [x] (println "x" x) (call-expression x *scope stdout stderr)))
                     (vec))))
             (into {})))
-    :else (do (wrap-print "Unknown structure of map" (pr-str xs) "\n") nil)))
+    :else (do (stderr "Unknown structure of map" (pr-str xs) "\n") nil)))
 
-(defn call-expression [expr *scope wrap-print]
+(defn call-expression [expr *scope stdout stderr]
   (cond
-    (string? expr) (resolve-literal expr *scope wrap-print)
+    (string? expr) (resolve-literal expr *scope stdout stderr)
     (vector? expr)
       (let [head (first expr)]
         (cond
           (string? head)
             (case head
-              "今有" (call-define (get expr 1) (get expr 2) *scope wrap-print)
-              "答曰" (call-println (subvec expr 1) *scope wrap-print)
-              "列" (call-vector (subvec expr 1) *scope wrap-print)
-              "置" (call-hashmap (subvec expr 1) *scope wrap-print)
-              (wrap-print "未有术也, 不知" (pr-str head) "\n"))
-          (vector? head) (wrap-print "未有术也, 不知" (pr-str head))
-          :else (wrap-print "未知几何也" (pr-str expr) "\n")))
-    :else (wrap-print "未知几何也" (pr-str expr) "\n")))
+              "今有" (call-define (get expr 1) (get expr 2) *scope stdout stderr)
+              "答曰" (call-println (subvec expr 1) *scope stdout stderr)
+              "列" (call-vector (subvec expr 1) *scope stdout stderr)
+              "置" (call-hashmap (subvec expr 1) *scope stdout stderr)
+              (stderr "未有术也, 不知" (pr-str head)))
+          (vector? head) (stderr "未有术也, 不知" (pr-str head))
+          :else (stderr "未知几何也" (pr-str expr))))
+    :else (stderr "未知几何也" (pr-str expr))))
 
-(defn call-define [var-name value-name *scope wrap-print]
+(defn call-define [var-name value-name *scope stdout stderr]
   (cond
-    (nil? var-name) (wrap-print "未知名也")
-    (nil? value-name) (wrap-print "未知实也")
-    :else (swap! *scope assoc var-name (call-expression value-name *scope wrap-print))))
+    (nil? var-name) (stderr "未知名也")
+    (nil? value-name) (stderr "未知实也")
+    :else (swap! *scope assoc var-name (call-expression value-name *scope stdout stderr))))
 
-(defn run-program [instructions]
-  (let [*result (atom "")
-        *scope (atom {})
-        wrap-print (fn [& xs] (swap! *result str (string/join " " xs)))]
-    (doseq [expr instructions] (call-expression expr *scope wrap-print))
-    (println @*result)
-    @*result))
+(defn run-program [source stdout stderr]
+  (let [instructions (parse source), *scope (atom {})]
+    (doseq [expr instructions] (call-expression expr *scope stdout stderr))))
