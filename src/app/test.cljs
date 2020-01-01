@@ -24,6 +24,8 @@
 
 (deftest test-fn (testing "函数" (is (= (load-log "fn.log") (eval-out "fn.cirru")))))
 
+(deftest test-if (testing "若判断语句" (is (= (load-log "if.log") (eval-out "if.cirru")))))
+
 (deftest
  test-math
  (testing "算术" (is (= (load-log "variables.log") (eval-out "variables.cirru")))))

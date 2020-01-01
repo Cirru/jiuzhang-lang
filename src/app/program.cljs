@@ -16,6 +16,8 @@
 
 (declare call-self-multiply)
 
+(declare call-defn)
+
 (declare call-negate)
 
 (declare call-divide)
@@ -24,9 +26,11 @@
 
 (declare call-add)
 
-(defn call-defn [body *scope stdout stderr] (println "TODO"))
+(defn call-do [body *scope stdout stderr] (println "TODO DO"))
 
-(defn call-fn [body *scope stdout stderr] (println "TODO"))
+(defn call-fn [body *scope stdout stderr] (println "TODO FN"))
+
+(defn call-if [body *scope stdout stderr] (println "TODO IF"))
 
 (defn flat-map-structure? [xs] (every? string? (take-nth 2 xs)))
 
@@ -53,13 +57,25 @@
 
 (def number-pattern #"[一二两三四五六七八九零十百千万亿负点]+")
 
+(defn scope-contains? [*scope x]
+  (assert (satisfies? IDeref *scope) "*scope should be an atom")
+  (if (contains? @*scope x)
+    true
+    (if (contains? @*scope :__scope__) (recur (:__scope__ @*scope) x) false)))
+
+(defn scope-get [*scope x]
+  (assert (satisfies? IDeref *scope) "*scope should be an atom")
+  (if (contains? @*scope x)
+    (get @*scope x)
+    (if (contains? @*scope :__scope__) (recur (:__scope__ @*scope) x) nil)))
+
 (defn resolve-literal [token *scope stdout stderr]
   (comment println "reading literal" token @*scope)
   (cond
     (= (first token) "|") (subs token 1)
     (= (first token) ":") (subs token 1)
     (re-matches number-pattern token) (nzh/decodeS token)
-    (contains? @*scope token) (get @*scope token)
+    (scope-contains? *scope token) (scope-get *scope token)
     :else (do (stderr "未知几何也" (pr-str token) "\n") nil)))
 
 (defn call-vector [xs *scope stdout stderr]
@@ -137,10 +153,22 @@
               "负" (call-negate x1 *scope stdout stderr)
               "术曰" (call-defn body *scope stdout stderr)
               "术" (call-fn body *scope stdout stderr)
+              "若" (call-if body *scope stdout stderr)
+              "则" (call-do body *scope stdout stderr)
               "按" nil
               "案" nil
               "又按" nil
-              (stderr "未有术也, 不知" (pr-str head)))
+              (cond
+                (scope-contains? *scope head)
+                  (let [f (scope-get *scope head)]
+                    (comment println "*scope" @*scope f)
+                    (cond
+                      (fn? f)
+                        (apply
+                         f
+                         (->> body (map (fn [x] (call-expression x *scope stdout stderr)))))
+                      :else (stderr "未有法也, 得" (pr-str head) "乃" f)))
+                :else (stderr "未有术也, 不知" (pr-str head))))
           (vector? head) (stderr "未有术也, 不知" (pr-str head))
           :else (stderr "未知几何也" (pr-str expr))))
     :else (stderr "未知几何也" (pr-str expr))))
@@ -155,6 +183,30 @@
                        (map (fn [x] (call-expression x *scope stdout stderr)))
                        (reduce *))]
         (/ x0 delta))))
+
+(defn call-defn [body *scope stdout stderr]
+  (let [f-name (get body 0), f-params (get body 1), f-body (subvec body 2)]
+    (when-not (string? f-name) (stderr "未知" (pr-str f-name)))
+    (when-not (every? string? f-params) (stderr "未知" (pr-str f-params)))
+    (when (empty? f-body) (stderr "未有函数体"))
+    (swap!
+     *scope
+     assoc
+     f-name
+     (fn [& ys]
+       (let [*closure (atom {:__scope__ *scope})
+             *count-p (atom 0)
+             *result (atom nil)
+             ys-vec (vec ys)]
+         (when-not (= (count ys) (count f-params))
+           (stderr "长度未相符" (pr-str ys) (pr-str f-params)))
+         (comment println "ys" ys f-params)
+         (doseq [p f-params]
+           (swap! *closure assoc p (get ys-vec @*count-p))
+           (swap! *count-p inc))
+         (doseq [expr f-body]
+           (reset! *result (call-expression expr *closure stdout stderr)))
+         @*result)))))
 
 (defn call-define [var-name value-name *scope stdout stderr]
   (cond
