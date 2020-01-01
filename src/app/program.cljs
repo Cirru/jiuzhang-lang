@@ -13,10 +13,13 @@
 
 (defn flat-map-structure? [xs] (every? string? (take-nth 2 xs)))
 
+(def simple-str-pattern #"[\u4e00-\u9fa5\w\d_\-=\+\?\!\|\.%]+")
+
 (defn format-value [x]
   (cond
     (number? x) (nzh/encodeS x)
-    (string? x) x
+    (string? x)
+      (if (re-matches simple-str-pattern x) (str "|" x) (str "\"|" (subs (pr-str x) 1)))
     (map? x)
       (str
        "("
