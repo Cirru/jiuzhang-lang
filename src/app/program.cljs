@@ -1,11 +1,35 @@
 
 (ns app.program (:require ["nzh/cn" :as nzh] [clojure.string :as string]))
 
+(declare call-println)
+
+(declare call-vector)
+
 (declare call-expression)
 
 (declare call-define)
 
-(declare call-println)
+(declare call-hashmap)
+
+(defn flat-map-structure? [xs] (every? string? (take-nth 2 xs)))
+
+(defn format-value [x]
+  (cond
+    (number? x) (nzh/encodeS x)
+    (string? x) x
+    (map? x)
+      (str
+       "("
+       "置"
+       " "
+       (->> x
+            (map
+             (fn [pair]
+               (str "(" (format-value (first pair)) " " (format-value (last pair)) ")")))
+            (string/join " "))
+       ")")
+    (vector? x) (str "(" "列" " " (->> x (map format-value) (string/join " ")) ")")
+    :else (pr-str x)))
 
 (def number-pattern #"[一二三四五六七八九零十百千万亿负点]+")
 
@@ -17,13 +41,40 @@
     (contains? @*scope token) (get @*scope token)
     :else (do (wrap-print "未知几何也" (pr-str token) "\n") nil)))
 
+(defn call-vector [xs *scope wrap-print]
+  (->> xs (map (fn [x] (call-expression x *scope wrap-print))) (into [])))
+
 (defn call-println [xs *scope wrap-print]
   (wrap-print
    (->> xs
         (map (fn [x] (call-expression x *scope wrap-print)))
-        (map (fn [x] (cond (number? x) (nzh/encodeS x) (string? x) x :else (pr-str x))))
+        (map (fn [x] (format-value x)))
         (string/join " "))
    "\n"))
+
+(defn call-hashmap [xs *scope wrap-print]
+  (cond
+    (every? vector? xs)
+      (->> xs
+           (map
+            (fn [pair]
+              (when-not (= 2 (count pair))
+                (wrap-print "Invalid length" (count pair) "of" (pr-str pair)))
+              (->> pair
+                   (map (fn [x] (println "x" x) (call-expression x *scope wrap-print)))
+                   (vec))))
+           (into {}))
+    (and (even? (count xs)) (flat-map-structure? xs))
+      ((->> (partition 2 xs)
+            (map
+             (fn [pair]
+               (when-not (= 2 (count pair))
+                 (wrap-print "Invalid length" (count pair) "of" (pr-str pair)))
+               (->> pair
+                    (map (fn [x] (println "x" x) (call-expression x *scope wrap-print)))
+                    (vec))))
+            (into {})))
+    :else (do (wrap-print "Unknown structure of map" (pr-str xs) "\n") nil)))
 
 (defn call-expression [expr *scope wrap-print]
   (cond
@@ -35,6 +86,8 @@
             (case head
               "今有" (call-define (get expr 1) (get expr 2) *scope wrap-print)
               "答曰" (call-println (subvec expr 1) *scope wrap-print)
+              "列" (call-vector (subvec expr 1) *scope wrap-print)
+              "置" (call-hashmap (subvec expr 1) *scope wrap-print)
               (wrap-print "未有术也, 不知" (pr-str head) "\n"))
           (vector? head) (wrap-print "未有术也, 不知" (pr-str head))
           :else (wrap-print "未知几何也" (pr-str expr) "\n")))
