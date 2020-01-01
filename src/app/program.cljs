@@ -16,6 +16,8 @@
 
 (declare call-self-multiply)
 
+(declare call-negate)
+
 (declare call-divide)
 
 (declare call-hashmap)
@@ -69,13 +71,16 @@
         (string/join " "))
    "\n"))
 
+(defn call-negate [x *scope stdout stderr]
+  (let [v (call-expression x *scope stdout stderr)] (- v)))
+
 (defn call-multiply [xs *scope stdout stderr]
   (->> xs (map (fn [x] (call-expression x *scope stdout stderr))) (reduce *)))
 
 (defn call-minus [body *scope stdout stderr]
   (cond
     (empty? body) 0
-    (= 1 (count body)) (call-expression (first body) *scope stdout stderr)
+    (= 1 (count body)) (- 0  (call-expression (first body) *scope stdout stderr))
     :else
       (let [x0 (call-expression (first body) *scope stdout stderr)
             delta (->> (rest body)
@@ -118,6 +123,7 @@
               "又有" (call-define x1 x2 *scope stdout stderr)
               "令" (call-define x1 x2 *scope stdout stderr)
               "答曰" (call-println body *scope stdout stderr)
+              "得" (call-println body *scope stdout stderr)
               "列" (call-vector body *scope stdout stderr)
               "置" (call-hashmap body *scope stdout stderr)
               "并" (call-add body *scope stdout stderr)
@@ -125,6 +131,7 @@
               "减" (call-minus body *scope stdout stderr)
               "除" (call-divide body *scope stdout stderr)
               "自乘" (call-self-multiply x1 *scope stdout stderr)
+              "负" (call-negate x1 *scope stdout stderr)
               "按" nil
               (stderr "未有术也, 不知" (pr-str head)))
           (vector? head) (stderr "未有术也, 不知" (pr-str head))
@@ -134,7 +141,7 @@
 (defn call-divide [body *scope stdout stderr]
   (cond
     (empty? body) 1
-    (= 1 (count body)) (call-expression (first body) *scope stdout stderr)
+    (= 1 (count body)) (/ 1 (call-expression (first body) *scope stdout stderr))
     :else
       (let [x0 (call-expression (first body) *scope stdout stderr)
             delta (->> (rest body)
