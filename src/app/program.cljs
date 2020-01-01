@@ -47,7 +47,7 @@
     (vector? x) (str "(" "列" " " (->> x (map format-value) (string/join " ")) ")")
     :else (pr-str x)))
 
-(def number-pattern #"[一二三四五六七八九零十百千万亿负点]+")
+(def number-pattern #"[一二两三四五六七八九零十百千万亿负点]+")
 
 (defn resolve-literal [token *scope stdout stderr]
   (comment println "reading literal" token @*scope)
@@ -156,7 +156,7 @@
     :else (swap! *scope assoc var-name (call-expression value-name *scope stdout stderr))))
 
 (defn call-add [xs *scope stdout stderr]
-  (->> xs (map (fn [x] (call-expression x *scope stdout stderr))) (reduce *)))
+  (->> xs (map (fn [x] (call-expression x *scope stdout stderr))) (reduce +)))
 
 (defn run-program [source stdout stderr]
   (let [instructions (parse source), *scope (atom {})]

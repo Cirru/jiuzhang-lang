@@ -1265,7 +1265,7 @@
             :data $ {}
               |T $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1577725682186) (:text |def) (:id |BEJ11Nhyb)
               |j $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1577725682186) (:text |number-pattern) (:id |8J0t9xQOC)
-              |r $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1577725733558) (:text "|#\"[一二三四五六七八九零十百千万亿负点]+") (:id |49bwDDS0)
+              |r $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1577880708793) (:text "|#\"[一二两三四五六七八九零十百千万亿负点]+") (:id |49bwDDS0)
             :id |6XgihQ6vC
           |call-hashmap $ {} (:type :expr) (:by |rJG4IHzWf) (:at 1577844074322)
             :data $ {}
@@ -1553,7 +1553,7 @@
                   |v $ {} (:type :expr) (:by |rJG4IHzWf) (:at 1577879065383)
                     :data $ {}
                       |T $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1577879065383) (:text |reduce) (:id |eui-oR8mPD)
-                      |j $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1577879065383) (:text |*) (:id |57QF_63kXm)
+                      |j $ {} (:type :leaf) (:by |rJG4IHzWf) (:at 1577880799778) (:text |+) (:id |57QF_63kXm)
                     :id |xPjc0BOM0Y
                 :id |ittrxjnls
             :id |nlVYmYiGc
