@@ -1,16 +1,22 @@
 {
-  "name": "calcit-workflow",
-  "version": "0.1.0",
+  "name": "@cirru/jiuzhang",
+  "version": "0.0.1-a1",
   "description": "ClojureScript workflow using Calcit Editor",
   "main": "index.js",
   "scripts": {
-    "watch": "shadow-cljs watch client",
+    "watch": "shadow-cljs watch client counting cli test",
     "serve": "http-server dist -s",
-    "build-cdn": "shadow-cljs clj-run build.main/build-cdn",
+    "build-cdn": "rm -rfv dist/* && shadow-cljs clj-run build.main/build-cdn",
     "build": "shadow-cljs clj-run build.main/build",
+    "compile": "rm -rfv dist/* && yarn shadow-cljs release cli",
     "up": "yarn build-cdn && tiye-up",
     "page": "shadow-cljs clj-run build.main/page",
+    "prepare": "yarn compile",
     "ln": "cd target && rm -f entry && ln -s ../entry"
+  },
+  "bin": {
+    "jiuzhang": "./dist/cli.js",
+    "9c": "./dist/cli.js"
   },
   "repository": {
     "type": "git",
@@ -19,13 +25,14 @@
   "author": "jiyinyiyong",
   "license": "MIT",
   "devDependencies": {
-    "http-server": "^0.12.0",
-    "shadow-cljs": "^2.8.83"
-  },
-  "dependencies": {
     "@mvc-works/codearea": "^0.0.1-a2",
     "feather-icons": "^4.25.0",
-    "nzh": "^1.0.4",
+    "http-server": "^0.12.0",
+    "shadow-cljs": "^2.8.83",
     "shortid": "^2.2.15"
+  },
+  "dependencies": {
+    "chalk": "^3.0.0",
+    "nzh": "^1.0.4"
   }
 }

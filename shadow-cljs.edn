@@ -39,9 +39,24 @@
         :build-options {:manifest-name "assets.edn"}
       }
     }
+    :cli {
+      :target :node-script, :output-to "target/cli.js", :main app.cli/main!
+      :devtools {:after-load app.cli/main!}
+      :release {
+        :output-to "dist/cli.js"
+      }
+    }
     :page {
       :target :node-script, :output-to "target/page.js", :main app.page/main!
       :devtools {:after-load app.page/main!}
+    }
+    :counting {
+      :target :node-script, :output-to "target/counting.js", :main app.counting/main!
+      :devtools {:after-load app.counting/main!}
+    }
+    :test {
+      :target :node-test, :output-to "target/test.js", :ns-regexp "test$"
+      :autorun true
     }
   }
 }

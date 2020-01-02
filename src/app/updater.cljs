@@ -6,5 +6,6 @@
     :states (update store :states (mutate op-data))
     :content (assoc store :content op-data)
     :result (assoc store :result op-data)
+    :error-result (assoc store :error-result op-data)
     :hydrate-storage op-data
     store))

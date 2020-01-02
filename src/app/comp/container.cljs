@@ -10,8 +10,8 @@
             [respo-md.comp.md :refer [comp-md]]
             [app.config :refer [dev?]]
             ["@mvc-works/codearea" :refer [codearea]]
-            [cirru-parser.core :refer [parse]]
-            [app.program :refer [run-program]]))
+            [app.program :refer [run-program]]
+            [clojure.string :as string]))
 
 (defeffect effect-codearea () (action el) (codearea (.querySelector el ".source-code")))
 
@@ -36,9 +36,18 @@
         {:inner-text "Run",
          :style ui/button,
          :on-click (fn [e d! m!]
-           (let [instructions (parse (:content store)), result (run-program instructions)]
-             (println ":result" result)
-             (d! :result result)))}))
+           (let [*result (atom "")
+                 *error-result (atom "")
+                 stdout (fn [& xs] (swap! *result str (string/join " " xs) "\n"))
+                 stderr (fn [& xs] (swap! *error-result str (string/join " " xs) "\n"))]
+             (run-program (:content store) stdout stderr)
+             (println ":result" @*result)
+             (js/console.error @*error-result)
+             (d! :result @*result)
+             (d! :error-result @*error-result)))}))
+      (pre
+       {:style {:background-color (hsl 0 0 97), :padding 8, :color :red},
+        :inner-text (:error-result store)})
       (pre
        {:style {:background-color (hsl 0 0 90), :padding 8}, :inner-text (:result store)}))
      (when dev? (cursor-> :reel comp-reel states reel {})))]))
