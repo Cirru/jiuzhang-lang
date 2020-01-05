@@ -4,7 +4,11 @@
 
 > Toy project of mimicing Ancient Chinese programming. Based on Cirru project. Learning from [The Nine Chapters on the Mathematical Art](https://en.wikipedia.org/wiki/The_Nine_Chapters_on_the_Mathematical_Art).
 
-Previews http://repo.cirru.org/jiuzhang-lang/
+Previews http://jiuzhang.cirru.org/ .
+
+Originals http://www.guoxue123.com/zhibu/0201/04jzsj/index.htm .
+
+> 昔在包犧氏始畫八卦，以通神明之德，以類萬物之情，作九九之術以合六爻之變。暨於黃帝神而化之，引而伸之，於是建曆紀，協律呂，用稽道原，然後兩儀四象精微之氣可得而效焉。記稱隸首作數，其詳未之聞也。按周公制禮而有九數，九數之流，則九章是矣。
 
 ### Usage
 

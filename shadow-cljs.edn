@@ -1,5 +1,5 @@
 {
-  :source-paths ["src" "cli"]
+  :source-paths ["src" "cli" "tests"]
   :cache-blockers #{cumulo-util.build}
   :dependencies [
     [cirru/parser "0.2.3"]
