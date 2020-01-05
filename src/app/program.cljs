@@ -8,9 +8,15 @@
 
 (declare call-minus)
 
+(declare call-littler)
+
 (declare call-multiply)
 
+(declare call-fn)
+
 (declare call-expression)
+
+(declare call-larger)
 
 (declare call-define)
 
@@ -20,17 +26,17 @@
 
 (declare call-negate)
 
+(declare call-equal)
+
 (declare call-divide)
 
 (declare call-hashmap)
 
+(declare call-if)
+
 (declare call-add)
 
 (defn call-do [body *scope stdout stderr] (println "TODO DO"))
-
-(defn call-fn [body *scope stdout stderr] (println "TODO FN"))
-
-(defn call-if [body *scope stdout stderr] (println "TODO IF"))
 
 (defn flat-map-structure? [xs] (every? string? (take-nth 2 xs)))
 
@@ -53,6 +59,10 @@
             (string/join " "))
        ")")
     (vector? x) (str "(" "列" " " (->> x (map format-value) (string/join " ")) ")")
+    (fn? x) (str "术(" (pr-str x) ")")
+    (= x true) "实"
+    (= x false) "虚"
+    (nil? x) "空"
     :else (pr-str x)))
 
 (def number-pattern #"[一二两三四五六七八九零十百千万亿负点]+")
@@ -74,7 +84,10 @@
   (cond
     (= (first token) "|") (subs token 1)
     (= (first token) ":") (subs token 1)
-    (re-matches number-pattern token) (nzh/decodeS token)
+    (= token "实") true
+    (= token "虚") false
+    (= token "空") nil
+    (re-matches number-pattern token) (nzh/decodeS (string/replace token "两" "二"))
     (scope-contains? *scope token) (scope-get *scope token)
     :else (do (stderr "未知几何也" (pr-str token) "\n") nil)))
 
@@ -108,6 +121,31 @@
                        (reduce +))]
         (- x0 delta))))
 
+(defn call-littler [xs *scope stdout stderr]
+  (assert (= 2 (count xs)) "\"少于\"需二参数")
+  (<
+   (call-expression (get xs 0) *scope stdout stderr)
+   (call-expression (get xs 1) *scope stdout stderr)))
+
+(defn call-larger [xs *scope stdout stderr]
+  (assert (= 2 (count xs)) "\"多于\"需二参数")
+  (println
+   xs
+   (call-expression (get xs 0) *scope stdout stderr)
+   (call-expression (get xs 1) *scope stdout stderr))
+  (>
+   (call-expression (get xs 0) *scope stdout stderr)
+   (call-expression (get xs 1) *scope stdout stderr)))
+
+(defn call-if [body *scope stdout stderr]
+  (assert (>= (count body) 2) "\"若\"需传入\"条件\"及\"结果\"")
+  (let [condition (get body 0)
+        then-part (get body 1)
+        else-part (if (>= (count body) 3) (get body 2) nil)]
+    (if (call-expression condition *scope stdout stderr)
+      (call-expression then-part *scope stdout stderr)
+      (if (nil? else-part) nil (call-expression else-part *scope stdout stderr)))))
+
 (defn call-hashmap [xs *scope stdout stderr]
   (cond
     (every? vector? xs)
@@ -127,6 +165,24 @@
                (->> pair (map (fn [x] (call-expression x *scope stdout stderr))) (vec))))
             (into {})))
     :else (do (stderr "Unknown structure of map" (pr-str xs) "\n") nil)))
+
+(defn call-fn [body *scope stdout stderr]
+  (let [f-params (get body 0), f-body (subvec body 1)]
+    (when-not (every? string? f-params) (stderr "未知" (pr-str f-params)))
+    (when (empty? f-body) (stderr "未有函数体"))
+    (fn [& ys]
+      (let [*closure (atom {:__scope__ *scope})
+            *count-p (atom 0)
+            *result (atom nil)
+            ys-vec (vec ys)]
+        (when-not (= (count ys) (count f-params))
+          (stderr "长度未相符" (pr-str ys) (pr-str f-params)))
+        (comment println "ys" ys f-params)
+        (doseq [p f-params]
+          (swap! *closure assoc p (get ys-vec @*count-p))
+          (swap! *count-p inc))
+        (doseq [expr f-body] (reset! *result (call-expression expr *closure stdout stderr)))
+        @*result))))
 
 (defn call-expression [expr *scope stdout stderr]
   (cond
@@ -154,6 +210,9 @@
               "术曰" (call-defn body *scope stdout stderr)
               "术" (call-fn body *scope stdout stderr)
               "若" (call-if body *scope stdout stderr)
+              "多于" (call-larger body *scope stdout stderr)
+              "少于" (call-littler body *scope stdout stderr)
+              "直" (call-equal body *scope stdout stderr)
               "则" (call-do body *scope stdout stderr)
               "按" nil
               "案" nil
@@ -172,6 +231,12 @@
           (vector? head) (stderr "未有术也, 不知" (pr-str head))
           :else (stderr "未知几何也" (pr-str expr))))
     :else (stderr "未知几何也" (pr-str expr))))
+
+(defn call-equal [xs *scope stdout stderr]
+  (assert (= 2 (count xs)) "\"直\"需二参数")
+  (=
+   (call-expression (get xs 0) *scope stdout stderr)
+   (call-expression (get xs 1) *scope stdout stderr)))
 
 (defn call-divide [body *scope stdout stderr]
   (cond

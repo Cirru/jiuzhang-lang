@@ -22,6 +22,8 @@
  test-data
  (testing "聚物于列于置" (is (= (load-log "data.log") (eval-out "data.cirru")))))
 
+(deftest test-fibo (testing "菲氏数也" (is (= (load-log "fibo.log") (eval-out "fibo.cirru")))))
+
 (deftest test-fn (testing "函数" (is (= (load-log "fn.log") (eval-out "fn.cirru")))))
 
 (deftest test-if (testing "若判断语句" (is (= (load-log "if.log") (eval-out "if.cirru")))))
