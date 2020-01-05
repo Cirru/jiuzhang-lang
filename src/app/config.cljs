@@ -18,6 +18,6 @@
   {:dev-ui "http://localhost:8100/main-fonts.css",
    :release-ui "http://cdn.tiye.me/favored-fonts/main-fonts.css",
    :cdn-url "http://cdn.tiye.me/jiuzhang-lang/",
-   :title "Calcit",
-   :icon "http://cdn.tiye.me/logo/Cirru.png",
-   :storage-key "九章编程"})
+   :title "九章编程",
+   :icon "http://cdn.tiye.me/logo/cirru.png",
+   :storage-key "jiuzhang"})
