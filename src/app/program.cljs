@@ -163,7 +163,8 @@
 
 (defn call-larger [xs *scope stdout stderr]
   (assert (= 2 (count xs)) "\"多于\"需二参数")
-  (println
+  (comment
+   println
    xs
    (call-expression (get xs 0) *scope stdout stderr)
    (call-expression (get xs 1) *scope stdout stderr))
