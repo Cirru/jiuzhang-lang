@@ -114,6 +114,12 @@ jiuzhang demo.cirru
     答曰 |虚也
 ```
 
+空值, 记为`空`:
+
+```cirru
+得 空
+```
+
 四则计算:
 
 ```cirru

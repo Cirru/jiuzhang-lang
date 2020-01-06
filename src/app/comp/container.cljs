@@ -53,9 +53,14 @@
                   stdout (fn [& xs] (swap! *result str (string/join " " xs) "\n"))
                   stderr (fn [& xs] (swap! *error-result str (string/join " " xs) "\n"))]
               (run-program (:code state) stdout stderr)
-              (println ":result" @*result)
-              (js/console.error @*error-result)
-              (m! (merge state {:result @*result, :error @*error-result}))))}))
+              (println "Result:" @*result)
+              (when-not (string/blank? @*error-result) (js/console.error @*error-result))
+              (m! (merge state {:result @*result, :error @*error-result}))))})
+        (if (not= (:code state) code0)
+          (a
+           {:inner-text "重置",
+            :style ui/link,
+            :on-click (fn [e d! m!] (m! (merge state {:code code0, :result "", :error ""})))})))
        (if-not (string/blank? (:error state))
          (pre
           {:style {:background-color :transparent, :color :red}, :inner-text (:error state)}))
@@ -84,16 +89,12 @@
       (div {:style {:width "60%"}} (<> jiuzhang-quote))))
     (div
      {:style (merge {:margin :auto, :max-width 960, :padding "40px 0"})}
-     (cursor->
-      :variables
-      comp-runner
-      states
-      "Example of variables"
-      (inline "variables.cirru"))
-     (cursor-> :data comp-runner states "Example of data" (inline "data.cirru"))
-     (cursor-> :fn comp-runner states "Example of fn" (inline "fn.cirru"))
-     (cursor-> :if comp-runner states "Example of if" (inline "if.cirru"))
-     (cursor-> :math comp-runner states "Example of math" (inline "math.cirru")))
+     (cursor-> :variables comp-runner states "名也" (inline "variables.cirru"))
+     (cursor-> :data comp-runner states "列置者" (inline "data.cirru"))
+     (cursor-> :fn comp-runner states "术曰" (inline "fn.cirru"))
+     (cursor-> :if comp-runner states "若语句" (inline "if.cirru"))
+     (cursor-> :math comp-runner states "算术" (inline "math.cirru"))
+     (cursor-> :fibo comp-runner states "菲氏数" (inline "fibo.cirru")))
     (div
      {:style {:padding 80, :background-color (hsl 200 80 70), :color :white}}
      (div

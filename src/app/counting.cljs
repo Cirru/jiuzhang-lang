@@ -7,10 +7,9 @@
   (let [content (fs/readFileSync "./九章算术.txt" "utf8")
         chars (vec (string/split content ""))
         collected (->> chars
-                       (map-indexed
-                        (fn [idx x] (str x (get chars (inc idx)) (get chars (+ idx 2)))))
+                       (map-indexed (fn [idx x] (str x (get chars (inc idx)))))
                        (filter (fn [x] (re-matches chinese-pattern x)))
                        (group-by identity)
                        (map (fn [[c xs]] [c (count xs)]))
                        (sort-by (fn [[c n]] (unchecked-negate n))))]
-    (println (->> collected (map (fn [[c n]] (str c " " n))) (take 40) (string/join "\n")))))
+    (println (->> collected (map (fn [[c n]] (str c " " n))) (take 100) (string/join "\n")))))
