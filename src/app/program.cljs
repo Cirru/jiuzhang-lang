@@ -2,9 +2,17 @@
 (ns app.program
   (:require ["nzh/cn" :as nzh] [clojure.string :as string] [cirru-parser.core :refer [parse]]))
 
+(declare call-method)
+
+(declare call-get)
+
 (declare call-println)
 
+(declare call-map)
+
 (declare call-vector)
+
+(declare call-new)
 
 (declare call-minus)
 
@@ -13,6 +21,8 @@
 (declare call-multiply)
 
 (declare call-fn)
+
+(declare call-filter)
 
 (declare call-expression)
 
@@ -31,6 +41,8 @@
 (declare call-divide)
 
 (declare call-hashmap)
+
+(declare call-not)
 
 (declare call-if)
 
@@ -65,6 +77,9 @@
     (nil? x) "空"
     :else (pr-str x)))
 
+(def global-object
+  (cond (exists? js/window) js/window (exists? js/global) js/global :else js/Object))
+
 (def number-pattern #"[一二两三四五六七八九零十百千万亿负点]+")
 
 (defn scope-contains? [*scope x]
@@ -84,6 +99,7 @@
   (cond
     (= (first token) "|") (subs token 1)
     (= (first token) ":") (subs token 1)
+    (string/starts-with? token "js/") (aget global-object (subs token 3))
     (= token "实") true
     (= token "虚") false
     (= token "空") nil
@@ -104,6 +120,10 @@
         (map (fn [x] (format-value x)))
         (string/join " "))))
 
+(defn call-not [x *scope stdout stderr] (not (call-expression x *scope stdout stderr)))
+
+(defn call-new [x *scope stdout stderr] (new (call-expression x *scope stdout stderr)))
+
 (defn call-negate [x *scope stdout stderr]
   (let [v (call-expression x *scope stdout stderr)] (- v)))
 
@@ -120,6 +140,20 @@
                        (map (fn [x] (call-expression x *scope stdout stderr)))
                        (reduce +))]
         (- x0 delta))))
+
+(defn call-method [head body *scope stdout stderr]
+  (js/console.log head body)
+  (let [obj (call-expression (get body 0) *scope stdout stderr)
+        method (aget obj (subs head 1))
+        args (->> (subvec body 1) (map (fn [x] (call-expression x *scope stdout stderr))))]
+    (js/console.log obj (.-call method))
+    (.apply method obj (clj->js args))))
+
+(defn call-map [xs *scope stdout stderr]
+  (assert (= 2 (count xs)) "\"各\"需二参数")
+  (let [x0 (call-expression (get xs 1) *scope stdout stderr)
+        result (map (call-expression (get xs 0) *scope stdout stderr) x0)]
+    (cond (map? x0) (into {} result) (vector? x0) (vec result) :else result)))
 
 (defn call-littler [xs *scope stdout stderr]
   (assert (= 2 (count xs)) "\"少于\"需二参数")
@@ -166,6 +200,12 @@
             (into {})))
     :else (do (stderr "Unknown structure of map" (pr-str xs) "\n") nil)))
 
+(defn call-get [xs *scope stdout stderr]
+  (assert (= 2 (count xs)) "\"取\"需二参数")
+  (get
+   (call-expression (get xs 0) *scope stdout stderr)
+   (call-expression (get xs 1) *scope stdout stderr)))
+
 (defn call-fn [body *scope stdout stderr]
   (let [f-params (get body 0), f-body (subvec body 1)]
     (when-not (every? string? f-params) (stderr "未知" (pr-str f-params)))
@@ -183,6 +223,12 @@
           (swap! *count-p inc))
         (doseq [expr f-body] (reset! *result (call-expression expr *closure stdout stderr)))
         @*result))))
+
+(defn call-filter [xs *scope stdout stderr]
+  (assert (= 2 (count xs)) "\"其\"需二参数")
+  (let [x0 (call-expression (get xs 1) *scope stdout stderr)
+        result (filter (call-expression (get xs 0) *scope stdout stderr) x0)]
+    (cond (map? x0) (into {} result) (vector? x0) (vec result) :else result)))
 
 (defn call-expression [expr *scope stdout stderr]
   (cond
@@ -214,10 +260,16 @@
               "少于" (call-littler body *scope stdout stderr)
               "直" (call-equal body *scope stdout stderr)
               "则" (call-do body *scope stdout stderr)
+              "非" (call-not x1 *scope stdout stderr)
+              "如" (call-new x1 *scope stdout stderr)
+              "取" (call-get body *scope stdout stderr)
+              "各" (call-map body *scope stdout stderr)
+              "其" (call-filter body *scope stdout stderr)
               "按" nil
               "案" nil
               "又按" nil
               (cond
+                (string/starts-with? head ".") (call-method head body *scope stdout stderr)
                 (scope-contains? *scope head)
                   (let [f (scope-get *scope head)]
                     (comment println "*scope" @*scope f)
