@@ -28,6 +28,8 @@
 
 (deftest test-if (testing "若判断语句" (is (= (load-log "if.log") (eval-out "if.cirru")))))
 
+(deftest test-list (testing "取数于列" (is (= (load-log "list.log") (eval-out "list.cirru")))))
+
 (deftest
  test-math
  (testing "算术" (is (= (load-log "variables.log") (eval-out "variables.cirru")))))

@@ -86,7 +86,7 @@
        (<>
         "(The Nine Chapters on the Mathematical Art)"
         {:font-size 18, :font-family ui/font-fancy, :font-weight 300}))
-      (div {:style {:width "60%"}} (<> jiuzhang-quote))))
+      (div {:style {:width "60%"}} (<> jiuzhang-quote) (<> "(This is toy project.)"))))
     (div
      {:style (merge {:margin :auto, :max-width 960, :padding "40px 0"})}
      (cursor-> :variables comp-runner states "名也" (inline "variables.cirru"))
@@ -94,7 +94,8 @@
      (cursor-> :fn comp-runner states "术曰" (inline "fn.cirru"))
      (cursor-> :if comp-runner states "若语句" (inline "if.cirru"))
      (cursor-> :math comp-runner states "算术" (inline "math.cirru"))
-     (cursor-> :fibo comp-runner states "菲氏数" (inline "fibo.cirru")))
+     (cursor-> :fibo comp-runner states "菲氏数" (inline "fibo.cirru"))
+     (cursor-> :list comp-runner states "取数于列" (inline "list.cirru")))
     (div
      {:style {:padding 80, :background-color (hsl 200 80 70), :color :white}}
      (div

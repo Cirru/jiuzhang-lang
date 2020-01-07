@@ -1,6 +1,6 @@
 {
   "name": "@cirru/jiuzhang",
-  "version": "0.0.1-a1",
+  "version": "0.0.1-a2",
   "description": "ClojureScript workflow using Calcit Editor",
   "main": "index.js",
   "scripts": {
