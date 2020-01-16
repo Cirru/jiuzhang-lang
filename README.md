@@ -14,6 +14,8 @@ Originals http://www.guoxue123.com/zhibu/0201/04jzsj/index.htm .
 
 ### Usage
 
+![npm](https://img.shields.io/npm/v/@cirru/jiuzhang.svg?style=flat-square)
+
 ```bash
 yarn global add @cirru/jiuzhang
 
