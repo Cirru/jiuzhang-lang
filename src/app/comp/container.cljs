@@ -4,7 +4,7 @@
             [respo-ui.core :as ui]
             [respo.core
              :refer
-             [defcomp defeffect cursor-> <> div button textarea span input pre a]]
+             [defcomp defeffect >> <> div button textarea span input pre a]]
             [respo.comp.space :refer [=<]]
             [reel.comp.reel :refer [comp-reel]]
             [respo-md.comp.md :refer [comp-md]]
@@ -19,7 +19,8 @@
 (defcomp
  comp-runner
  (states title code0)
- (let [state (or (:data states) {:code code0, :result "按 \"点击按钮运行\"", :error ""})]
+ (let [cursor (:cursor states)
+       state (or (:data states) {:code code0, :result "按 \"点击按钮运行\"", :error ""})]
    [(effect-codearea)
     (div
      {:style {:margin "80px 0", :background-color (hsl 0 0 98), :padding "16px"}}
@@ -38,7 +39,7 @@
                  :min-height 320,
                  :border (str "1px solid " (hsl 0 0 93)),
                  :background-color :white}),
-        :on-input (fn [e d! m!] (m! (assoc state :code (:value e))))})
+        :on-input (fn [e d!] (d! cursor (assoc state :code (:value e))))})
       (=< 16 nil)
       (div
        {:style ui/expand}
@@ -47,7 +48,7 @@
         (a
          {:inner-text "运行",
           :style ui/link,
-          :on-click (fn [e d! m!]
+          :on-click (fn [e d!]
             (let [*result (atom "")
                   *error-result (atom "")
                   stdout (fn [& xs] (swap! *result str (string/join " " xs) "\n"))
@@ -55,12 +56,13 @@
               (run-program (:code state) stdout stderr)
               (println "Result:" @*result)
               (when-not (string/blank? @*error-result) (js/console.error @*error-result))
-              (m! (merge state {:result @*result, :error @*error-result}))))})
+              (d! cursor (merge state {:result @*result, :error @*error-result}))))})
         (if (not= (:code state) code0)
           (a
            {:inner-text "重置",
             :style ui/link,
-            :on-click (fn [e d! m!] (m! (merge state {:code code0, :result "", :error ""})))})))
+            :on-click (fn [e d!]
+              (d! cursor (merge state {:code code0, :result "", :error ""})))})))
        (if-not (string/blank? (:error state))
          (pre
           {:style {:background-color :transparent, :color :red}, :inner-text (:error state)}))
@@ -89,13 +91,13 @@
       (div {:style {:width "60%"}} (<> jiuzhang-quote) (<> "(This is toy project.)"))))
     (div
      {:style (merge {:margin :auto, :max-width 960, :padding "40px 0"})}
-     (cursor-> :variables comp-runner states "名也" (inline "variables.cirru"))
-     (cursor-> :data comp-runner states "列置者" (inline "data.cirru"))
-     (cursor-> :fn comp-runner states "术曰" (inline "fn.cirru"))
-     (cursor-> :if comp-runner states "若语句" (inline "if.cirru"))
-     (cursor-> :math comp-runner states "算术" (inline "math.cirru"))
-     (cursor-> :fibo comp-runner states "菲氏数" (inline "fibo.cirru"))
-     (cursor-> :list comp-runner states "取数于列" (inline "list.cirru")))
+     (comp-runner (>> states :variables) "名也" (inline "variables.cirru"))
+     (comp-runner (>> states :data) "列置者" (inline "data.cirru"))
+     (comp-runner (>> states :fn) "术曰" (inline "fn.cirru"))
+     (comp-runner (>> states :if) "若语句" (inline "if.cirru"))
+     (comp-runner (>> states :math) "算术" (inline "math.cirru"))
+     (comp-runner (>> states :fibo) "菲氏数" (inline "fibo.cirru"))
+     (comp-runner (>> states :list) "取数于列" (inline "list.cirru")))
     (div
      {:style {:padding 80, :background-color (hsl 200 80 70), :color :white}}
      (div
@@ -107,4 +109,4 @@
       (div
        {:style {}}
        (comp-md "Based on toolchains from [Cirru Project](https://github.com/Cirru/)."))))
-    (when dev? (cursor-> :reel comp-reel states reel {})))))
+    (when dev? (comp-reel (>> states :reel) reel {})))))
