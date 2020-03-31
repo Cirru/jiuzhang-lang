@@ -97,7 +97,8 @@
      (comp-runner (>> states :if) "若语句" (inline "if.cirru"))
      (comp-runner (>> states :math) "算术" (inline "math.cirru"))
      (comp-runner (>> states :fibo) "菲氏数" (inline "fibo.cirru"))
-     (comp-runner (>> states :list) "取数于列" (inline "list.cirru")))
+     (comp-runner (>> states :list) "取数于列" (inline "list.cirru"))
+     (comp-runner (>> states :native-api) "用平台之函数" (inline "native-api.cirru")))
     (div
      {:style {:padding 80, :background-color (hsl 200 80 70), :color :white}}
      (div

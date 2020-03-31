@@ -137,10 +137,18 @@ jiuzhang demo.cirru
 得 (除 一百) (除 一百 二) (除 一百 二 三十)
 ```
 
-TODO
+`js/Math.min` 取运行平台之函数,
 
+```cirru
+得 $ js/Math.min 两百 一百 四百
 ```
-求, 取
+
+`引`取模块,  `clj/js->clj` 取数据转化之法:
+
+```cirru
+今有 文件服务 $ 引 fs
+
+得 $ clj/js->clj $ .readdirSync 文件服务 |./
 ```
 
 ### Workflow
