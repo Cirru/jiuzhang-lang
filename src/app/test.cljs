@@ -35,5 +35,9 @@
  (testing "算术" (is (= (load-log "variables.log") (eval-out "variables.cirru")))))
 
 (deftest
+ test-native-api
+ (testing "用平台之函数" (is (= (load-log "native-api.log") (eval-out "native-api.cirru")))))
+
+(deftest
  test-variables
  (testing "数有其名也" (is (= (load-log "math.log") (eval-out "math.cirru")))))

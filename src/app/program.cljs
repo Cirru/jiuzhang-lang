@@ -8,6 +8,8 @@
 
 (declare call-println)
 
+(declare call-host)
+
 (declare call-map)
 
 (declare call-vector)
@@ -44,11 +46,17 @@
 
 (declare call-not)
 
+(declare call-native)
+
 (declare call-if)
 
 (declare call-add)
 
 (defn call-do [body *scope stdout stderr] (println "TODO DO"))
+
+(defn call-require [xs *scope stdout stderr]
+  (assert (= 1 (count xs)) "\"引\"需一参数")
+  (js/require (first xs)))
 
 (defn flat-map-structure? [xs] (every? string? (take-nth 2 xs)))
 
@@ -77,10 +85,15 @@
     (nil? x) "空"
     :else (pr-str x)))
 
-(def global-object
-  (cond (exists? js/window) js/window (exists? js/global) js/global :else js/Object))
-
 (def number-pattern #"[一二两三四五六七八九零十百千万亿负点]+")
+
+(defn read-native-fn [o xs]
+  (comment println "取" xs)
+  (if (empty? xs)
+    o
+    (if (nil? o)
+      (do (js/console.error "Failed to load native function:" o xs) nil)
+      (let [o' (aget o (first xs))] (recur o' (rest xs))))))
 
 (defn scope-contains? [*scope x]
   (assert (satisfies? IDeref *scope) "*scope should be an atom")
@@ -99,7 +112,8 @@
   (cond
     (= (first token) "|") (subs token 1)
     (= (first token) ":") (subs token 1)
-    (string/starts-with? token "js/") (aget global-object (subs token 3))
+    (string/starts-with? token "js/")
+      (read-native-fn js/globalThis (string/split (subs token 3) "."))
     (= token "实") true
     (= token "虚") false
     (= token "空") nil
@@ -127,13 +141,22 @@
 (defn call-negate [x *scope stdout stderr]
   (let [v (call-expression x *scope stdout stderr)] (- v)))
 
+(defn call-native [head body *scope stdout stderr]
+  (let [method (subs head 3), f (read-native-fn js/globalThis (string/split method "."))]
+    (if (fn? f)
+      (let [args (array)]
+        (doseq [x (->> body (map (fn [x] (call-expression x *scope stdout stderr))))]
+          (.push args x))
+        (.apply f nil args))
+      (do (stderr (str "不知其术: " head " " (pr-str f))) nil))))
+
 (defn call-multiply [xs *scope stdout stderr]
   (->> xs (map (fn [x] (call-expression x *scope stdout stderr))) (reduce *)))
 
 (defn call-minus [body *scope stdout stderr]
   (cond
     (empty? body) 0
-    (= 1 (count body)) (- 0  (call-expression (first body) *scope stdout stderr))
+    (= 1 (count body)) (- 0 (call-expression (first body) *scope stdout stderr))
     :else
       (let [x0 (call-expression (first body) *scope stdout stderr)
             delta (->> (rest body)
@@ -142,11 +165,11 @@
         (- x0 delta))))
 
 (defn call-method [head body *scope stdout stderr]
-  (js/console.log head body)
+  (comment js/console.log head body)
   (let [obj (call-expression (get body 0) *scope stdout stderr)
         method (aget obj (subs head 1))
         args (->> (subvec body 1) (map (fn [x] (call-expression x *scope stdout stderr))))]
-    (js/console.log obj (.-call method))
+    (comment js/console.log obj (.-call method))
     (.apply method obj (clj->js args))))
 
 (defn call-map [xs *scope stdout stderr]
@@ -180,6 +203,12 @@
     (if (call-expression condition *scope stdout stderr)
       (call-expression then-part *scope stdout stderr)
       (if (nil? else-part) nil (call-expression else-part *scope stdout stderr)))))
+
+(defn call-host [head body *scope stdout stderr]
+  (let [method (subs head 4), f (case method "clj->js" clj->js "js->clj" js->clj (do nil))]
+    (if (fn? f)
+      (apply f (->> body (map (fn [x] (call-expression x *scope stdout stderr)))))
+      (do (stderr (str "不知其术: " head " " (pr-str f))) nil))))
 
 (defn call-hashmap [xs *scope stdout stderr]
   (cond
@@ -266,11 +295,15 @@
               "取" (call-get body *scope stdout stderr)
               "各" (call-map body *scope stdout stderr)
               "其" (call-filter body *scope stdout stderr)
+              "引" (call-require body *scope stdout stderr)
               "按" nil
               "案" nil
               "又按" nil
               (cond
                 (string/starts-with? head ".") (call-method head body *scope stdout stderr)
+                (string/starts-with? head "js/")
+                  (call-native head body *scope stdout stderr)
+                (string/starts-with? head "clj/") (call-host head body *scope stdout stderr)
                 (scope-contains? *scope head)
                   (let [f (scope-get *scope head)]
                     (comment println "*scope" @*scope f)
@@ -334,6 +367,9 @@
 
 (defn call-add [xs *scope stdout stderr]
   (->> xs (map (fn [x] (call-expression x *scope stdout stderr))) (reduce +)))
+
+(def global-object
+  (cond (exists? js/window) js/window (exists? js/global) js/global :else js/Object))
 
 (defn run-program [source stdout stderr]
   (let [instructions (parse source), *scope (atom {})]
