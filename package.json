@@ -26,10 +26,13 @@
     "@mvc-works/codearea": "^0.0.2",
     "feather-icons": "^4.28.0",
     "shadow-cljs": "^2.10.14",
-    "shortid": "^2.2.15"
+    "shortid": "^2.2.15",
+    "bottom-tip": "^0.1.2-a3",
+    "vite": "^2.4.2"
   },
   "dependencies": {
+    "@calcit/procs": "^0.4.10",
     "chalk": "^4.1.0",
-    "nzh": "^1.0.4"
+    "nzh": "^1.0.4",
   }
 }
