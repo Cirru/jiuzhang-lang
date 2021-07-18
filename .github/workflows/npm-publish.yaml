@@ -40,6 +40,7 @@ jobs:
           && git clone https://github.com/Respo/reel.calcit.git
           && git clone https://github.com/Respo/respo-markdown.calcit.git
           && git clone https://github.com/Respo/respo-ui.calcit.git
+          && git clone https://github.com/calcit-lang/calcit-test
 
       - name: build assets
         run: 'yarn && yarn compile'

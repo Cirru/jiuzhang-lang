@@ -1,7 +1,7 @@
 
 {} (:package |app)
   :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!)
-    :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/
+    :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |calcit-test/
     :version |0.0.1
   :files $ {}
     |app.comp.container $ {}
@@ -67,8 +67,6 @@
                       {} $ :style ({})
                       comp-md "\"Based on toolchains from [Cirru Project](https://github.com/Cirru/)."
                 when dev? $ comp-reel (>> states :reel) reel ({})
-        |*tmp-result $ quote (defatom *tmp-result "\"")
-        |*tmp-error-result $ quote (defatom *tmp-error-result "\"")
         |comp-runner $ quote
           defcomp comp-runner (states title code0)
             let
@@ -104,18 +102,12 @@
                           {} $ :padding 0
                         a $ {} (:inner-text "\"运行") (:style ui/link)
                           :on-click $ fn (e d!)
-                            let
-                                stdout $ fn (& xs)
-                                  swap! *tmp-result str (join-str xs "\" ") &newline
-                                stderr $ fn (& xs)
-                                  swap! *tmp-error-result str (join-str xs "\" ") &newline
-                              reset! *tmp-result "\""
-                              reset! *tmp-error-result "\""
-                              run-program (:code state) stdout stderr
-                              println "\"Result:" @*tmp-result
-                              when-not (blank? @*tmp-error-result) (js/console.error @*tmp-error-result)
+                            let[] (error ret scope warning)
+                              run-program $ :code state
+                              println "\"Result:" ret
+                              when-not (blank? error) (js/console.error error)
                               d! cursor $ merge state
-                                {} (:result @*tmp-result) (:error @*tmp-error-result)
+                                {} (:result ret) (:error error)
                         if
                           not= (:code state) code0
                           a $ {} (:inner-text "\"重置") (:style ui/link)
@@ -209,10 +201,10 @@
               (nil? x) "\"空"
               true $ pr-str x
         |call-expression $ quote
-          defn call-expression (expr *scope stdout stderr)
+          defn call-expression (expr scope)
             cond
                 string? expr
-                resolve-literal expr *scope stdout stderr
+                resolve-literal expr scope stdout stderr
               (list? expr)
                 let
                     head $ first expr
@@ -224,47 +216,47 @@
                       case-default head
                         cond
                             .starts-with? head "\"."
-                            call-method head body *scope stdout stderr
-                          (.starts-with? head "\"js/") (call-native head body *scope stdout stderr)
-                          (.starts-with? head "\"clj/") (call-host head body *scope stdout stderr)
-                          (scope-contains? *scope head)
+                            call-method head body scope stdout stderr
+                          (.starts-with? head "\"js/") (call-native head body scope stdout stderr)
+                          (.starts-with? head "\"clj/") (call-host head body scope stdout stderr)
+                          (scope-contains? scope head)
                             let
-                                f $ scope-get *scope head
-                              ; println "\"*scope" @*scope f
+                                f $ scope-get scope head
+                              ; println "\"*scope" @scope f
                               cond
                                   fn? f
                                   apply f $ -> body
-                                    map $ fn (x) (call-expression x *scope stdout stderr)
+                                    map $ fn (x) (call-expression x scope stdout stderr)
                                 true $ stderr "\"未有法也, 得" (pr-str head) "\"乃" f
                           :else $ stderr "\"未有术也, 不知" (pr-str head)
-                        "\"今有" $ call-define x1 x2 *scope stdout stderr
-                        "\"有" $ call-define x1 x2 *scope stdout stderr
-                        "\"又有" $ call-define x1 x2 *scope stdout stderr
-                        "\"令" $ call-define x1 x2 *scope stdout stderr
-                        "\"答曰" $ call-println body *scope stdout stderr
-                        "\"得" $ call-println body *scope stdout stderr
-                        "\"又得" $ call-println body *scope stdout stderr
-                        "\"列" $ call-vector body *scope stdout stderr
-                        "\"置" $ call-hashmap body *scope stdout stderr
-                        "\"并" $ call-add body *scope stdout stderr
-                        "\"乘" $ call-multiply body *scope stdout stderr
-                        "\"减" $ call-minus body *scope stdout stderr
-                        "\"除" $ call-divide body *scope stdout stderr
-                        "\"自乘" $ call-self-multiply x1 *scope stdout stderr
-                        "\"负" $ call-negate x1 *scope stdout stderr
-                        "\"术曰" $ call-defn body *scope stdout stderr
-                        "\"术" $ call-fn body *scope stdout stderr
-                        "\"若" $ call-if body *scope stdout stderr
-                        "\"多于" $ call-larger body *scope stdout stderr
-                        "\"少于" $ call-littler body *scope stdout stderr
-                        "\"直" $ call-equal body *scope stdout stderr
-                        "\"则" $ call-do body *scope stdout stderr
-                        "\"非" $ call-not x1 *scope stdout stderr
-                        "\"如" $ call-new x1 *scope stdout stderr
-                        "\"取" $ call-get body *scope stdout stderr
-                        "\"各" $ call-map body *scope stdout stderr
-                        "\"其" $ call-filter body *scope stdout stderr
-                        "\"引" $ call-require body *scope stdout stderr
+                        "\"今有" $ call-define x1 x2 scope stdout stderr
+                        "\"有" $ call-define x1 x2 scope stdout stderr
+                        "\"又有" $ call-define x1 x2 scope stdout stderr
+                        "\"令" $ call-define x1 x2 scope stdout stderr
+                        "\"答曰" $ call-println body scope stdout stderr
+                        "\"得" $ call-println body scope stdout stderr
+                        "\"又得" $ call-println body scope stdout stderr
+                        "\"列" $ call-vector body scope stdout stderr
+                        "\"置" $ call-hashmap body scope stdout stderr
+                        "\"并" $ call-add body scope stdout stderr
+                        "\"乘" $ call-multiply body scope stdout stderr
+                        "\"减" $ call-minus body scope stdout stderr
+                        "\"除" $ call-divide body scope stdout stderr
+                        "\"自乘" $ call-self-multiply x1 scope stdout stderr
+                        "\"负" $ call-negate x1 scope stdout stderr
+                        "\"术曰" $ call-defn body scope stdout stderr
+                        "\"术" $ call-fn body scope stdout stderr
+                        "\"若" $ call-if body scope stdout stderr
+                        "\"多于" $ call-larger body scope stdout stderr
+                        "\"少于" $ call-littler body scope stdout stderr
+                        "\"直" $ call-equal body scope stdout stderr
+                        "\"则" $ call-do body scope stdout stderr
+                        "\"非" $ call-not x1 scope stdout stderr
+                        "\"如" $ call-new x1 scope stdout stderr
+                        "\"取" $ call-get body scope stdout stderr
+                        "\"各" $ call-map body scope stdout stderr
+                        "\"其" $ call-filter body scope stdout stderr
+                        "\"引" $ call-require body scope stdout stderr
                         "\"按" nil
                         "\"案" nil
                         "\"又按" nil
@@ -294,7 +286,7 @@
                 f-body $ .slice body 2
               when-not (string? f-name)
                 stderr "\"未知" $ pr-str f-name
-              when-not (every? string? f-params)
+              when-not (every? f-params string?)
                 stderr "\"未知" $ pr-str f-params
               when (empty? f-body) (stderr "\"未有函数体")
               ; "\"TODO context"
@@ -322,13 +314,21 @@
                   stderr $ str "\"不知其术: " head "\" " (pr-str f)
                   , nil
         |run-program $ quote
-          defn run-program (source stdout stderr)
+          defn run-program (source)
             let
                 instructions $ parse-cirru source
-              reset! *tmp-scope $ {}
               if
                 = instructions $ [] ([])
-                , nil $ &doseq (expr instructions) (call-expression expr *tmp-scope stdout stderr)
+                , nil $ apply-args
+                  nil ([]) ({}) instructions
+                  fn (ret out scope xs)
+                    if (empty? xs) ([] nil ret out scope)
+                      let
+                          x0 $ first xs
+                          items $ call-expression x0 scope
+                        let[] (error r item-out next-scope) items $ if (some? error)
+                          [] error nil (concat out item-out) next-scope
+                          recur r (concat out item-out) scope $ rest xs
         |call-hashmap $ quote
           defn call-hashmap (xs *scope stdout stderr)
             cond
@@ -357,9 +357,7 @@
               reduce +
         |call-get $ quote
           defn call-get (xs *scope stdout stderr)
-            assert
-              = 2 $ count xs
-              , "\"\"取\"需二参数"
+            assert "\"\"取\"需二参数" $ = 2 (count xs)
             get
               call-expression (get xs 0) *scope stdout stderr
               call-expression (get xs 1) *scope stdout stderr
@@ -368,9 +366,8 @@
             assert "\"\"各\"需二参数" $ = 2 (count xs)
             let
                 x0 $ call-expression (get xs 1) *scope stdout stderr
-                result $ map
+                result $ map x0
                   call-expression (get xs 0) *scope stdout stderr
-                  , x0
               , result
         |call-new $ quote
           defn call-new (x *scope stdout stderr)
@@ -383,7 +380,7 @@
             assert
               = 1 $ count xs
               , "\"\"引\"需一参数"
-            js/require $ first xs
+            .!require js/globalThis $ first xs
         |read-native-fn $ quote
           defn read-native-fn (o xs) (; println "\"取" xs)
             if (empty? xs) o $ if (nil? o)
@@ -456,7 +453,7 @@
                 nil? var-name
                 stderr "\"未知名也"
               (nil? value-name) (stderr "\"未知实也")
-              :else $ swap! *scope assoc var-name (call-expression value-name *scope stdout stderr)
+              true $ swap! *scope assoc var-name (call-expression value-name *scope stdout stderr)
         |call-divide $ quote
           defn call-divide (body *scope stdout stderr)
             cond
@@ -494,16 +491,16 @@
               call-expression (get xs 0) *scope stdout stderr
               call-expression (get xs 1) *scope stdout stderr
         |call-method $ quote
-          defn call-method (head body *scope stdout stderr) (; js/console.log head body)
+          defn call-method (head body scope stdout stderr) (; js/console.log head body)
             let
-                obj $ call-expression (get body 0) *scope stdout stderr
+                obj $ call-expression (get body 0) scope stdout stderr
                 method $ aget obj (.slice head 1)
                 args $ -> (.slice body 1)
-                  map $ fn (x) (call-expression x *scope stdout stderr)
+                  map $ fn (x) (call-expression x scope stdout stderr)
               ; js/console.log obj $ .-call method
               .!apply method obj $ to-js-data args
         |resolve-literal $ quote
-          defn resolve-literal (token *scope stdout stderr) (; println "\"reading literal" token @*scope)
+          defn resolve-literal (token scope stdout stderr) (; println "\"reading literal" token scope)
             cond
                 = (first token) "\"|"
                 .slice token 1
@@ -516,7 +513,7 @@
               (= token "\"空") nil
               (re-matches number-pattern token)
                 nzh/decodeS $ .replace token "\"两" "\"二"
-              (scope-contains? *scope token) (scope-get *scope token)
+              (contains? scope token) (get scope token)
               true $ do
                 stderr "\"未知几何也" (pr-str token) &newline
                 , nil
@@ -609,7 +606,7 @@
     |app.main $ {}
       :ns $ quote
         ns app.main $ :require
-          [] respo.core :refer $ [] render! clear-cache! realize-ssr!
+          [] respo.core :refer $ [] render! clear-cache!
           [] app.comp.container :refer $ [] comp-container
           [] app.updater :refer $ [] updater
           [] app.schema :as schema
@@ -618,15 +615,15 @@
           [] reel.schema :as reel-schema
           [] cljs.reader :refer $ [] read-string
           [] app.config :as config
+          "\"bottom-tip" :default hud!
+          "\"./calcit.build-errors" :default build-errors
       :defs $ {}
         |render-app! $ quote
-          defn render-app! (renderer)
-            renderer mount-target (comp-container @*reel) (\ dispatch! % %2)
-        |ssr? $ quote
-          def ssr? $ some? (js/document.querySelector |meta.respo-ssr)
+          defn render-app! () $ render! mount-target (comp-container @*reel) dispatch!
         |persist-storage! $ quote
-          defn persist-storage! () $ .!setItem js/localStorage (:storage-key config/site)
-            format-cirru-edn $ :store @*reel
+          defn persist-storage! (event)
+            .!setItem js/localStorage (:storage-key config/site)
+              format-cirru-edn $ :store @*reel
         |mount-target $ quote
           def mount-target $ .querySelector js/document |.app
         |*reel $ quote
@@ -634,19 +631,16 @@
         |main! $ quote
           defn main! ()
             println "\"Running mode:" $ if config/dev? "\"dev" "\"release"
-            if ssr? $ render-app! realize-ssr!
-            render-app! render!
-            add-watch *reel :changes $ fn () (render-app! render!)
-            listen-devtools! |a dispatch!
-            .addEventListener js/window |beforeunload persist-storage!
-            js/setInterval persist-storage! $ * 1000 60
-            let
+            render-app!
+            add-watch *reel :changes $ fn (reel prev) (render-app!)
+            listen-devtools! |k dispatch!
+            ; .!addEventListener js/window |beforeunload persist-storage!
+            ; js/setInterval persist-storage! $ * 1000 60
+            ; let
                 raw $ .!getItem js/localStorage (:storage-key config/site)
               when (some? raw)
                 dispatch! :hydrate-storage $ parse-cirru-edn raw
             println "|App started."
-        |snippets $ quote
-          defn snippets () $ println config/cdn?
         |dispatch! $ quote
           defn dispatch! (op op-data)
             when
@@ -654,18 +648,21 @@
               println "\"Dispatch:" op
             reset! *reel $ reel-updater updater @*reel op op-data
         |reload! $ quote
-          defn reload! () (clear-cache!)
-            reset! *reel $ refresh-reel @*reel schema/store updater
-            println "|Code updated."
+          defn reload! () $ if (some? build-errors) (hud! "\"error" build-errors)
+            do (hud! "\"inactive" nil) (clear-cache!)
+              reset! *reel $ refresh-reel @*reel schema/store updater
+              println "|Code updated."
     |app.test $ {}
       :ns $ quote
         ns app.test $ :require
-          [] cljs.test :refer $ [] deftest is testing run-tests
+          [] calcit-test.core :refer $ [] deftest is testing run-tests
           [] "\"fs" :as fs
           [] "\"path" :as path
           [] app.program :refer $ [] run-program
-          [] clojure.string :as string
       :defs $ {}
+        |*log-result $ quote (defatom *log-result "\"")
+        |run-tests! $ quote
+          defn run-tests! () (test-fibo) (test-data) (test-fn) (test-if) (test-list) (test-math) (test-native-api) (test-variables)
         |test-data $ quote
           deftest test-data $ testing "\"聚物于列于置"
             is $ = (load-log "\"data.log") (eval-out "\"data.cirru")
@@ -678,6 +675,8 @@
         |test-math $ quote
           deftest test-math $ testing "\"算术"
             is $ = (load-log "\"variables.log") (eval-out "\"variables.cirru")
+        |main! $ quote
+          defn main! () $ run-tests!
         |test-fn $ quote
           deftest test-fn $ testing "\"函数"
             is $ = (load-log "\"fn.log") (eval-out "\"fn.cirru")
@@ -691,29 +690,25 @@
           defn eval-out (x)
             let
                 source $ fs/readFileSync (path/join js/__dirname "\"../tests" x) "\"utf8"
-                *result $ atom "\""
                 stdout $ fn (& xs)
-                  swap! *result str (string/join "\" " xs) \newline
+                  swap! *log-result str (.join-str xs "\" ") &newline
                 stderr js/console.error
+              reset! *log-result "\""
               ; println $ pr-str source
               run-program source stdout stderr
-              string/trim @*result
+              .trim @*log-result
         |test-native-api $ quote
           deftest test-native-api $ testing "\"用平台之函数"
             is $ = (load-log "\"native-api.log") (eval-out "\"native-api.cirru")
         |load-log $ quote
           defn load-log (x)
-            string/trim $ fs/readFileSync (path/join js/__dirname "\"../tests" x) "\"utf8"
+            .trim $ fs/readFileSync (path/join js/__dirname "\"../tests" x) "\"utf8"
+        |reload! $ quote
+          defn reload! () (println "\"Reloaded") (run-tests!)
     |app.config $ {}
       :ns $ quote (ns app.config)
       :defs $ {}
-        |cdn? $ quote
-          def cdn? $ cond
-              exists? js/window
-              , false
-            (exists? js/process) (= "\"true" js/process.env.cdn)
-            :else false
         |dev? $ quote
           def dev? $ = "\"dev" (get-env "\"mode")
         |site $ quote
-          def site $ {} (:dev-ui "\"http://localhost:8100/main-fonts.css") (:release-ui "\"http://cdn.tiye.me/favored-fonts/main-fonts.css") (:cdn-url "\"http://cdn.tiye.me/jiuzhang-lang/") (:title "\"九章编程") (:icon "\"http://cdn.tiye.me/logo/cirru.png") (:storage-key "\"jiuzhang")
+          def site $ {} (:dev-ui "\"http://localhost:8100/main-fonts.css") (:release-ui "\"http://cdn.tiye.me/favored-fonts/main-fonts.css") (:title "\"九章编程") (:icon "\"http://cdn.tiye.me/logo/cirru.png") (:storage-key "\"jiuzhang")

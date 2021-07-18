@@ -40,10 +40,6 @@
       :devtools {:after-load app.cli/main!}
       :release {:output-to "dist/cli.js"}
     }
-    :page {
-      :target :node-script, :output-to "target/page.js", :main app.page/main!
-      :devtools {:after-load app.page/main!}
-    }
     :counting {
       :target :node-script, :output-to "target/counting.js", :main app.counting/main!
       :devtools {:after-load app.counting/main!}

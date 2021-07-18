@@ -5,3 +5,4 @@
 js-out/
 node_modules/
 dist/
+yarn-error.log
