@@ -1,18 +1,20 @@
 {
   "name": "@cirru/jiuzhang",
-  "version": "0.0.2",
+  "version": "0.0.3-a1",
   "description": "ClojureScript workflow using Calcit Editor",
   "main": "index.js",
   "scripts": {
     "watch-page": "cr --emit-js",
     "watch-test": "cr --emit-js --init-fn=app.test/main! --reload-fn=app.test/reload!",
+    "compile-test": "cr --emit-js --init-fn=app.test/main! --reload-fn=app.test/reload! -1",
+    "compile-cli": "cr --emit-js --init-fn=app.cli/main! --reload-fn=app.cli/main! -1",
     "dev-test": "hot=true webpack --watch --stats-error-details",
     "release-page": "vite build --base=./",
     "release-server": "webpack"
   },
   "bin": {
-    "jiuzhang": "./dist/cli.js",
-    "9c": "./dist/cli.js"
+    "jiuzhang": "./bin/cli.js",
+    "9c": "./bin/cli.js"
   },
   "repository": {
     "type": "git",

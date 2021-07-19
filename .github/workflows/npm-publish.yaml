@@ -43,7 +43,12 @@ jobs:
           && git clone https://github.com/calcit-lang/calcit-test
 
       - name: build assets
-        run: 'yarn && yarn compile'
+        run: >
+          yarn && yarn compile-test && yarn webpack && node js-out/bundle.js
+
+      - name: build cli
+        run: >
+          yarn compile-cli && entry=./cli.js out=bin/ yarn webpack
 
       - name: publish
         run: npm publish

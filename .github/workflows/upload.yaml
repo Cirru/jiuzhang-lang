@@ -50,11 +50,13 @@ jobs:
 
       - run: yarn
 
+      - run: >
+          yarn compile-test && yarn webpack && node js-out/bundle.js
 
       - name: "compiles to js"
         run: >
           cr --emit-js --once
-          && yarn && yarn vite build --base=./
+          && yarn vite build --base=./
 
       - name: Deploy to server
         id: deploy

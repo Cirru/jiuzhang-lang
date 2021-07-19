@@ -8,7 +8,10 @@ let entry = process.env.entry ?? './test.js';
 console.log("Entry:", entry);
 
 let hot = process.env.hot === 'true' ? true : false;
-console.log("Hot:", hot)
+console.log("Hot:", hot);
+
+let out_folder = process.env.out ?? 'js-out/';
+console.log("Out:", out_folder);
 
 module.exports = {
   entry: hot ? [
@@ -27,7 +30,7 @@ module.exports = {
     md5: "commonjs md5",
   },
   output: {
-    path: path.resolve(__dirname, "js-out/"),
+    path: path.resolve(__dirname, out_folder),
     filename: "bundle.js",
   },
   plugins: [
