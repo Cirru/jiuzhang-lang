@@ -49,6 +49,7 @@ jobs:
         run: >
           rm -rfv dist/
           && yarn compile-cli && entry=./cli.js out=dist/ yarn webpack
+          && cp entry/bin.js dist/
 
       - name: publish
         run: npm publish
