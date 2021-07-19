@@ -47,7 +47,8 @@ jobs:
 
       - name: build cli
         run: >
-          yarn compile-cli && entry=./cli.js out=bin/ yarn webpack
+          rm -rfv dist/
+          && yarn compile-cli && entry=./cli.js out=dist/ yarn webpack
 
       - name: publish
         run: npm publish

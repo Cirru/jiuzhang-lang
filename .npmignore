@@ -17,10 +17,11 @@ main.js
 webpack*
 yarn-error.log
 
-dist/
 compact.cirru
 .*.cirru
 
 cli.js
 test.js
 .gitattributes
+
+bin/
