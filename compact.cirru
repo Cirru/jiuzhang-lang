@@ -102,11 +102,16 @@
                           {} $ :padding 0
                         a $ {} (:inner-text "\"运行") (:style ui/link)
                           :on-click $ fn (e d!)
-                            let[] (ret out)
-                              run-program $ :code state
-                              println "\"Result:" ret
-                              d! cursor $ merge state
-                                {} (:result out) (:error "\"")
+                            try
+                              let[] (ret out)
+                                run-program $ :code state
+                                println "\"Result:" ret
+                                d! cursor $ merge state
+                                  {} (:result out) (:error nil)
+                              fn (err)
+                                d! cursor $ merge state
+                                  {} (:result nil)
+                                    :error $ str err
                         if
                           not= (:code state) code0
                           a $ {} (:inner-text "\"重置") (:style ui/link)
@@ -372,9 +377,13 @@
           defn call-map (xs scope stdout)
             assert "\"\"各\"需二参数" $ = 2 (count xs)
             let[] (params new-scope) (extract-params xs scope stdout)
-              let
-                  result $ map (nth params 0) (get params 1)
-                [] result new-scope
+              []
+                map (nth params 0)
+                  fn (x)
+                    first $ 
+                      get params 1
+                      , x
+                , new-scope
         |call-new $ quote
           defn call-new (x scope stdout)
             let[] (v new-scope) (call-expression x scope stdout)
@@ -519,7 +528,11 @@
             assert "\"\"其\"需二参数" $ = 2 (count xs)
             let[] (params new-scope) (extract-params xs scope stdout)
               []
-                filter (nth params 0) (nth params 1)
+                filter (nth params 0)
+                  fn (x)
+                    first $ 
+                      nth params 1
+                      , x
                 , new-scope
         |global-object $ quote
           def global-object $ cond
@@ -736,13 +749,7 @@
           defn eval-out (x)
             let
                 source $ fs/readFileSync (path/join js/__dirname "\"../tests" x) "\"utf8"
-                stdout $ fn (& xs)
-                  swap! *log-result str (.join-str xs "\" ") &newline
-                stderr js/console.error
-              reset! *log-result "\""
-              ; println $ pr-str source
-              run-program source stdout stderr
-              .trim @*log-result
+              let[] (ret logs) (run-program source) (.trim logs)
         |test-native-api $ quote
           deftest test-native-api $ testing "\"用平台之函数"
             is $ = (load-log "\"native-api.log") (eval-out "\"native-api.cirru")
