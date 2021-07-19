@@ -102,12 +102,11 @@
                           {} $ :padding 0
                         a $ {} (:inner-text "\"运行") (:style ui/link)
                           :on-click $ fn (e d!)
-                            let[] (error ret scope warning)
+                            let[] (ret out)
                               run-program $ :code state
                               println "\"Result:" ret
-                              when-not (blank? error) (js/console.error error)
                               d! cursor $ merge state
-                                {} (:result ret) (:error error)
+                                {} (:result out) (:error "\"")
                         if
                           not= (:code state) code0
                           a $ {} (:inner-text "\"重置") (:style ui/link)
@@ -141,36 +140,36 @@
         ns app.program $ :require ("\"nzh/cn" :as nzh)
       :defs $ {}
         |call-equal $ quote
-          defn call-equal (xs *scope stdout stderr)
-            assert
-              = 2 $ count xs
-              , "\"\"直\"需二参数"
-            =
-              call-expression (get xs 0) *scope stdout stderr
-              call-expression (get xs 1) *scope stdout stderr
+          defn call-equal (xs scope stdout)
+            assert "\"\"直\"需二参数" $ = 2 (count xs)
+            let[] (params new-scope) (extract-params xs scope stdout)
+              []
+                = (get params 0) (get params 1)
+                , scope
         |call-minus $ quote
-          defn call-minus (body *scope stdout stderr)
+          defn call-minus (body scope stdout)
             cond
                 empty? body
-                , 0
+                [] 0 scope
               (= 1 (count body))
-                - 0 $ call-expression (first body) *scope stdout stderr
-              :else $ let
-                  x0 $ call-expression (first body) *scope stdout stderr
-                  delta $ ->> (rest body)
-                    map $ fn (x) (call-expression x *scope stdout stderr)
-                    reduce +
-                - x0 delta
+                let[] (ret new-scope)
+                  call-expression (first body) scope stdout
+                  [] (- 0 ret) new-scope
+              true $ let[] (params new-scope) (extract-params body scope stdout)
+                let
+                    x0 $ first params
+                    delta $ + & (rest params)
+                  []
+                    - (first params) delta
+                    , new-scope
         |call-vector $ quote
-          defn call-vector (xs *scope stdout stderr)
-            -> xs $ map
-              fn (x) (call-expression x *scope stdout stderr)
+          defn call-vector (xs scope stdout) (extract-params xs scope stdout)
         |call-println $ quote
-          defn call-println (xs *scope stdout stderr)
-            stdout $ -> xs
-              map $ fn (x) (call-expression x *scope stdout stderr)
-              map $ fn (x) (format-value x)
-              .join-str "\" "
+          defn call-println (xs scope stdout)
+            let[] (acc scope) (extract-params xs scope stdout)
+              do
+                stdout $ -> (map acc format-value) (.join-str "\" ")
+                [] nil scope
         |format-value $ quote
           defn format-value (x)
             cond
@@ -180,8 +179,8 @@
                 if (.test simple-str-pattern x) (str "\"|" x)
                   str "\"\"|" $ .slice (pr-str x) 1
               (map? x)
-                str "\"(" "\"置" "\" "
-                  -> x
+                str "\"(置 "
+                  -> x (.to-list)
                     map $ fn (pair)
                       str "\"("
                         format-value $ first pair
@@ -191,20 +190,20 @@
                     .join-str "\" "
                   , "\")"
               (list? x)
-                str "\"(" "\"列" "\" "
+                str "\"(列 "
                   -> x (map format-value) (.join-str "\" ")
                   , "\")"
               (fn? x)
-                str "\"术(" (pr-str x) "\")"
+                str "\"(术 " (pr-str x) "\")"
               (= x true) "\"实"
               (= x false) "\"虚"
               (nil? x) "\"空"
               true $ pr-str x
         |call-expression $ quote
-          defn call-expression (expr scope)
+          defn call-expression (expr scope stdout)
             cond
                 string? expr
-                resolve-literal expr scope stdout stderr
+                resolve-literal expr scope stdout
               (list? expr)
                 let
                     head $ first expr
@@ -216,180 +215,201 @@
                       case-default head
                         cond
                             .starts-with? head "\"."
-                            call-method head body scope stdout stderr
-                          (.starts-with? head "\"js/") (call-native head body scope stdout stderr)
-                          (.starts-with? head "\"clj/") (call-host head body scope stdout stderr)
-                          (scope-contains? scope head)
-                            let
-                                f $ scope-get scope head
-                              ; println "\"*scope" @scope f
-                              cond
-                                  fn? f
-                                  apply f $ -> body
-                                    map $ fn (x) (call-expression x scope stdout stderr)
-                                true $ stderr "\"未有法也, 得" (pr-str head) "\"乃" f
-                          :else $ stderr "\"未有术也, 不知" (pr-str head)
-                        "\"今有" $ call-define x1 x2 scope stdout stderr
-                        "\"有" $ call-define x1 x2 scope stdout stderr
-                        "\"又有" $ call-define x1 x2 scope stdout stderr
-                        "\"令" $ call-define x1 x2 scope stdout stderr
-                        "\"答曰" $ call-println body scope stdout stderr
-                        "\"得" $ call-println body scope stdout stderr
-                        "\"又得" $ call-println body scope stdout stderr
-                        "\"列" $ call-vector body scope stdout stderr
-                        "\"置" $ call-hashmap body scope stdout stderr
-                        "\"并" $ call-add body scope stdout stderr
-                        "\"乘" $ call-multiply body scope stdout stderr
-                        "\"减" $ call-minus body scope stdout stderr
-                        "\"除" $ call-divide body scope stdout stderr
-                        "\"自乘" $ call-self-multiply x1 scope stdout stderr
-                        "\"负" $ call-negate x1 scope stdout stderr
-                        "\"术曰" $ call-defn body scope stdout stderr
-                        "\"术" $ call-fn body scope stdout stderr
-                        "\"若" $ call-if body scope stdout stderr
-                        "\"多于" $ call-larger body scope stdout stderr
-                        "\"少于" $ call-littler body scope stdout stderr
-                        "\"直" $ call-equal body scope stdout stderr
-                        "\"则" $ call-do body scope stdout stderr
-                        "\"非" $ call-not x1 scope stdout stderr
-                        "\"如" $ call-new x1 scope stdout stderr
-                        "\"取" $ call-get body scope stdout stderr
-                        "\"各" $ call-map body scope stdout stderr
-                        "\"其" $ call-filter body scope stdout stderr
-                        "\"引" $ call-require body scope stdout stderr
-                        "\"按" nil
-                        "\"案" nil
-                        "\"又按" nil
+                            call-method head body scope stdout
+                          (.starts-with? head "\"js/") (call-native head body scope stdout)
+                          (.starts-with? head "\"clj/") (call-host head body scope stdout)
+                          (contains? scope head) (call-call head body scope stdout)
+                          true $ raise
+                            str "\"未有术也, 不知" $ pr-str head
+                        "\"今有" $ call-define x1 x2 scope stdout
+                        "\"有" $ call-define x1 x2 scope stdout
+                        "\"又有" $ call-define x1 x2 scope stdout
+                        "\"令" $ call-define x1 x2 scope stdout
+                        "\"答曰" $ call-println body scope stdout
+                        "\"得" $ call-println body scope stdout
+                        "\"又得" $ call-println body scope stdout
+                        "\"列" $ call-vector body scope stdout
+                        "\"置" $ call-hashmap body scope stdout
+                        "\"&置" $ call-native-hashmap body scope stdout
+                        "\"并" $ call-add body scope stdout
+                        "\"乘" $ call-multiply body scope stdout
+                        "\"减" $ call-minus body scope stdout
+                        "\"除" $ call-divide body scope stdout
+                        "\"自乘" $ call-self-multiply x1 scope stdout
+                        "\"负" $ call-negate x1 scope stdout
+                        "\"术曰" $ call-defn body scope stdout
+                        "\"术" $ call-fn body scope stdout
+                        "\"若" $ call-if body scope stdout
+                        "\"多于" $ call-larger body scope stdout
+                        "\"少于" $ call-littler body scope stdout
+                        "\"直" $ call-equal body scope stdout
+                        "\"则" $ call-do body scope stdout
+                        "\"非" $ call-not x1 scope stdout
+                        "\"如" $ call-new x1 scope stdout
+                        "\"取" $ call-get body scope stdout
+                        "\"各" $ call-map body scope stdout
+                        "\"其" $ call-filter body scope stdout
+                        "\"引" $ call-require body scope stdout
+                        "\"按" $ [] nil scope
+                        "\"案" $ [] nil scope
+                        "\"又按" $ [] nil scope
                     (list? head)
-                      stderr "\"未有术也, 不知" $ pr-str head
-                    true $ stderr "\"未知几何也" (pr-str expr)
-              true $ stderr "\"未知几何也" (pr-str expr)
+                      raise $ str "\"未有术也, 不知" (pr-str head)
+                    true $ raise
+                      str "\"未知几何也" $ pr-str expr
+              true $ raise
+                str "\"未知几何也" $ pr-str expr
         |call-littler $ quote
-          defn call-littler (xs *scope stdout stderr)
-            assert
-              = 2 $ count xs
-              , "\"\"少于\"需二参数"
-            <
-              call-expression (get xs 0) *scope stdout stderr
-              call-expression (get xs 1) *scope stdout stderr
+          defn call-littler (xs scope stdout)
+            assert "\"\"少于\"需二参数" $ = 2 (count xs)
+            let[] (params new-scope) (extract-params xs scope stdout)
+              []
+                < (get params 0) (get xs 1)
+                , new-scope
         |scope-contains? $ quote
           defn scope-contains? (*scope x)
             assert "\"*scope should be an atom" $ ref? *scope
             if (contains? @*scope x) true $ if (contains? @*scope :__scope__)
               recur (:__scope__ @*scope) x
               , false
+        |call-call $ quote
+          defn call-call (head body scope stdout)
+            let[] (params new-scope) (extract-params body scope stdout)
+              let
+                  f $ get scope head
+                ; println "\"*scope" @scope f
+                if (fn? f)
+                  [] (f & params) new-scope
+                  raise $ str "\"未有法也, 得" (pr-str head) "\"乃" f
         |call-defn $ quote
-          defn call-defn (body parent-scope stdout stderr)
+          defn call-defn (body parent-scope stdout)
             let
                 f-name $ get body 0
                 f-params $ get body 1
                 f-body $ .slice body 2
               when-not (string? f-name)
-                stderr "\"未知" $ pr-str f-name
+                raise $ str "\"未知" (pr-str f-name)
               when-not (every? f-params string?)
-                stderr "\"未知" $ pr-str f-params
-              when (empty? f-body) (stderr "\"未有函数体")
-              ; "\"TODO context"
-              fn (& ys)
-                when-not
-                  = (count ys) (count f-params)
-                  stderr "\"长度未相符" (pr-str ys) (pr-str f-params)
-                let
-                    scope $ apply-args (parent-scope f-params 0)
-                      fn (s params idx)
-                        if (empty? params) s $ recur
-                          assoc s (get params idx) (get ys idx)
-                          rest f-params
-                          inc idx
-                  reduce f-body nil $ fn (ret expr) (call-expression expr scope stdout stderr)
+                raise $ str "\"未知" (pr-str f-params)
+              when (empty? f-body)
+                raise $ str "\"未有函数体"
+              let
+                  f $ fn (& ys)
+                    when-not
+                      = (count ys) (count f-params)
+                      raise $ str "\"长度未相符" (pr-str ys) (pr-str f-params)
+                    let
+                        scope $ apply-args (parent-scope f-params 0)
+                          fn (s params idx)
+                            if (empty? params) s $ recur
+                              assoc s (first params) (get ys idx)
+                              rest params
+                              inc idx
+                      apply-args (nil scope f-body)
+                        fn (ret s xs)
+                          if (empty? xs) ([] ret s)
+                            let[] (v s2)
+                              call-expression (first xs) s stdout
+                              recur v s2 $ rest f-body
+                [] f $ assoc parent-scope f-name f
         |call-host $ quote
-          defn call-host (head body *scope stdout stderr)
-            let
-                method $ .slice head 4
-                f $ case-default method (do nil) ("\"九章->js" to-js-data) ("\"js->九章" to-cirru-edn)
-              if (fn? f)
-                apply f $ -> body
-                  map $ fn (x) (call-expression x *scope stdout stderr)
-                do
-                  stderr $ str "\"不知其术: " head "\" " (pr-str f)
-                  , nil
+          defn call-host (head body scope stdout)
+            let[] (params new-scope) (extract-params body scope)
+              let
+                  method $ .slice head 4
+                  f $ case-default method (do nil) ("\"九章->js" to-js-data) ("\"js->九章" to-cirru-edn)
+                if (fn? f)
+                  [] (f & params) new-scope
+                  raise $ str "\"不知其术: " head "\" " (pr-str f)
         |run-program $ quote
           defn run-program (source)
             let
                 instructions $ parse-cirru source
+                stdout $ fn (& args)
+                  reset! *stdout-logs $ str @*stdout-logs &newline (.join-str args "\" ")
+              reset! *stdout-logs "\""
               if
                 = instructions $ [] ([])
-                , nil $ apply-args
-                  nil ([]) ({}) instructions
-                  fn (ret out scope xs)
-                    if (empty? xs) ([] nil ret out scope)
-                      let
-                          x0 $ first xs
-                          items $ call-expression x0 scope
-                        let[] (error r item-out next-scope) items $ if (some? error)
-                          [] error nil (concat out item-out) next-scope
-                          recur r (concat out item-out) scope $ rest xs
+                [] nil "\""
+                apply-args
+                  nil ({}) instructions
+                  fn (ret scope xs)
+                    if (empty? xs) ([] ret @*stdout-logs)
+                      let[] (r next-scope)
+                        call-expression (first xs) scope stdout
+                        recur r next-scope $ rest xs
         |call-hashmap $ quote
-          defn call-hashmap (xs *scope stdout stderr)
-            cond
-                every? xs list?
-                -> xs $ map
-                  fn (pair)
+          defn call-hashmap (xs scope stdout)
+            if (every? xs list?)
+              []
+                -> xs
+                  map $ fn (pair)
                     when-not
                       = 2 $ count pair
-                      stderr "\"Invalid length" (count pair) "\"of" $ pr-str pair
+                      raise $ str "\"Invalid length" (count pair) "\"of" (pr-str pair)
                     -> pair $ map
-                      fn (x) (call-expression x *scope stdout stderr)
-              (and (= 0 (.rem (count xs) 2)) (flat-map-structure? xs))
-                (-> (.section-by xs 2) (map (fn (pair) (when-not (= 2 (count pair)) (stderr "\"Invalid length" (count pair) "\"of" (pr-str pair))) (-> pair (map (fn (x) (call-expression x *scope stdout stderr)))))))
-              true $ do
-                stderr "\"Unknown structure of map" (pr-str xs) &newline
-                , nil
+                      fn (x)
+                        first $ call-expression x scope stdout
+                  pairs-map
+                , scope
+              raise $ str "\"Unknown structure of map" (pr-str xs) &newline
         |call-self-multiply $ quote
-          defn call-self-multiply (x *scope stdout stderr)
-            let
-                v $ call-expression x *scope stdout stderr
-              * v v
+          defn call-self-multiply (x scope stdout)
+            let[] (v new-scope) (call-expression x scope stdout)
+              [] (* v v) new-scope
         |call-add $ quote
-          defn call-add (xs *scope stdout stderr)
-            ->> xs
-              map $ fn (x) (call-expression x *scope stdout stderr)
-              reduce +
+          defn call-add (xs scope stdout)
+            let[] (params new-scope) (extract-params xs scope stdout)
+              [] (+ & params) new-scope
         |call-get $ quote
-          defn call-get (xs *scope stdout stderr)
+          defn call-get (xs scope stdout)
             assert "\"\"取\"需二参数" $ = 2 (count xs)
-            get
-              call-expression (get xs 0) *scope stdout stderr
-              call-expression (get xs 1) *scope stdout stderr
+            let[] (params new-scope) (extract-params xs scope stdout)
+              []
+                get (nth params 0) (nth params 1)
+                , new-scope
         |call-map $ quote
-          defn call-map (xs *scope stdout stderr)
+          defn call-map (xs scope stdout)
             assert "\"\"各\"需二参数" $ = 2 (count xs)
-            let
-                x0 $ call-expression (get xs 1) *scope stdout stderr
-                result $ map x0
-                  call-expression (get xs 0) *scope stdout stderr
-              , result
+            let[] (params new-scope) (extract-params xs scope stdout)
+              let
+                  result $ map (nth params 0) (get params 1)
+                [] result new-scope
         |call-new $ quote
-          defn call-new (x *scope stdout stderr)
-            new $ call-expression x *scope stdout stderr
+          defn call-new (x scope stdout)
+            let[] (v new-scope) (call-expression x scope stdout)
+              [] (new v) new-scope
         |call-not $ quote
-          defn call-not (x *scope stdout stderr)
-            not $ call-expression x *scope stdout stderr
+          defn call-not (x scope stdout)
+            let[] (v new-scope) (call-expression x scope stdout)
+              [] (not v) new-scope
         |call-require $ quote
-          defn call-require (xs *scope stdout stderr)
-            assert
-              = 1 $ count xs
-              , "\"\"引\"需一参数"
-            .!require js/globalThis $ first xs
+          defn call-require (xs scope stdout)
+            assert "\"\"引\"需一参数" $ = 1 (count xs)
+            []
+              .!require js/globalThis $ first xs
+              , scope
         |read-native-fn $ quote
           defn read-native-fn (o xs) (; println "\"取" xs)
             if (empty? xs) o $ if (nil? o)
-              do (js/console.error "\"Failed to load native function:" o xs) nil
+              raise $ str "\"Failed to load native function:" o xs
               let
                   o' $ aget o (first xs)
                 recur o' $ rest xs
         |simple-str-pattern $ quote
           def simple-str-pattern $ new js/RegExp "\"[\\u4e00-\\u9fa5\\w\\d_\\-=\\+\\?\\!\\|\\.%]+"
+        |*stdout-logs $ quote (defatom *stdout-logs "\"")
+        |call-native-hashmap $ quote
+          defn call-native-hashmap (body scope stdout)
+            if
+              and
+                = 0 $ .rem (count body) 2
+                flat-map-structure? body
+              []
+                let[] (params new-scope) (extract-params body scope stdout)
+                  -> params (.section-by 2) (pairs-map)
+                , scope
+              raise "\"unknown structure for &置"
         |flat-map-structure? $ quote
           defn flat-map-structure? (xs)
             let
@@ -403,32 +423,43 @@
                       string? $ get xs (* 2 i)
                 , false
         |call-do $ quote
-          defn call-do (body *scope stdout stderr) (println "\"TODO DO")
+          defn call-do (body scope stdout)
+            apply-args (nil scope body)
+              fn (ret s xs)
+                if (empty? xs) ([] ret s)
+                  let[] (v s2)
+                    call-expression (first xs) s stdout
+                    recur v s2 $ rest xs
         |call-fn $ quote
-          defn call-fn (body parent-scope stdout stderr)
+          defn call-fn (body parent-scope stdout)
             let
                 f-params $ get body 0
                 f-body $ .slice body 1
               when-not (every? f-params string?)
-                stderr "\"未知" $ pr-str f-params
-              when (empty? f-body) (stderr "\"未有函数体")
-              fn (& ys)
-                when-not
-                  = (count ys) (count f-params)
-                  stderr "\"长度未相符" (pr-str ys) (pr-str f-params)
-                let
-                    scope $ apply-args (parent-scope f-params 0)
-                      fn (s params idx)
-                        if (empty? params) s $ recur
-                          assoc s (get params idx) (get ys idx)
-                          rest f-params
-                          inc idx
-                  reduce f-body nil $ fn (ret expr) (call-expression expr scope stdout stderr)
+                raise "\"未知" $ pr-str f-params
+              when (empty? f-body) (raise "\"未有函数体")
+              []
+                fn (& ys)
+                  when-not
+                    = (count ys) (count f-params)
+                    raise $ str "\"长度未相符" (pr-str ys) (pr-str f-params)
+                  let
+                      scope $ apply-args (parent-scope f-params 0)
+                        fn (s params idx)
+                          if (empty? params) s $ recur
+                            assoc s (first params) (get ys idx)
+                            rest params
+                            inc idx
+                    apply-args (nil scope f-body)
+                      fn (ret s xs)
+                        if (empty? xs) ([] ret s)
+                          let[] (v s2)
+                            call-expression (first xs) s stdout
+                            recur v s2 $ rest f-body
+                , parent-scope
         |call-if $ quote
-          defn call-if (body *scope stdout stderr)
-            assert
-              >= (count body) 2
-              , "\"\"若\"需传入\"条件\"及\"结果\""
+          defn call-if (body scope stdout)
+            assert "\"\"若\"需传入\"条件\"及\"结果\"" $ >= (count body) 2
             let
                 condition $ get body 0
                 then-part $ get body 1
@@ -436,43 +467,60 @@
                   >= (count body) 3
                   get body 2
                   , nil
-              if (call-expression condition *scope stdout stderr) (call-expression then-part *scope stdout stderr)
-                if (nil? else-part) nil $ call-expression else-part *scope stdout stderr
+              if
+                first $ call-expression condition scope stdout
+                call-expression then-part scope stdout
+                if (nil? else-part) ([] nil scope) (call-expression else-part scope stdout)
+        |extract-params $ quote
+          defn extract-params (xs scope stdout)
+            apply-args
+                []
+                , scope xs
+              fn (acc scope params)
+                if (empty? params) ([] acc scope)
+                  let-sugar
+                      p0 $ first params
+                      ([] ret new-scope) (call-expression p0 scope stdout)
+                    recur (conj acc ret) new-scope $ rest params
         |call-multiply $ quote
-          defn call-multiply (xs *scope stdout stderr)
-            ->> xs
-              map $ fn (x) (call-expression x *scope stdout stderr)
-              reduce *
+          defn call-multiply (xs scope stdout)
+            let[] (params new-scope) (extract-params xs scope stdout)
+              [] (* & params) new-scope
         |*tmp-scope $ quote
           defatom *tmp-scope $ {}
         |number-pattern $ quote
           def number-pattern $ new js/RegExp "\"[一二两三四五六七八九零十百千万亿负点]+"
         |call-define $ quote
-          defn call-define (var-name value-name *scope stdout stderr)
+          defn call-define (var-name value-name scope stdout)
             cond
                 nil? var-name
-                stderr "\"未知名也"
-              (nil? value-name) (stderr "\"未知实也")
-              true $ swap! *scope assoc var-name (call-expression value-name *scope stdout stderr)
+                raise "\"未知名也"
+              (nil? value-name) (raise "\"未知实也")
+              true $ let[] (v new-scope) (call-expression value-name scope stdout)
+                [] v $ assoc scope var-name v
         |call-divide $ quote
-          defn call-divide (body *scope stdout stderr)
+          defn call-divide (body scope stdout)
             cond
                 empty? body
-                , 1
+                [] 1 scope
               (= 1 (count body))
-                / 1 $ call-expression (first body) *scope stdout stderr
-              :else $ let
-                  x0 $ call-expression (first body) *scope stdout stderr
-                  delta $ ->> (rest body)
-                    map $ fn (x) (call-expression x *scope stdout stderr)
-                    reduce *
-                / x0 delta
+                let[] (v new-scope)
+                  call-expression (first body) scope stdout
+                  [] (/ 1 v) new-scope
+              true $ let[] (params new-scope) (extract-params body scope stdout)
+                let
+                    x0 $ first params
+                    delta $ + & (rest params)
+                  []
+                    &/ (first params) delta
+                    , new-scope
         |call-filter $ quote
-          defn call-filter (xs *scope stdout stderr)
+          defn call-filter (xs scope stdout)
             assert "\"\"其\"需二参数" $ = 2 (count xs)
-            let
-                x0 $ call-expression (get xs 1) *scope stdout stderr
-              filter x0 $ call-expression (get xs 0) *scope stdout stderr
+            let[] (params new-scope) (extract-params xs scope stdout)
+              []
+                filter (nth xs 0) (nth xs 1)
+                , new-scope
         |global-object $ quote
           def global-object $ cond
               exists? js/window
@@ -480,64 +528,61 @@
             (exists? js/global) js/global
             :else js/Object
         |call-larger $ quote
-          defn call-larger (xs *scope stdout stderr)
-            assert
-              = 2 $ count xs
-              , "\"\"多于\"需二参数"
-            ; println xs
-              call-expression (get xs 0) *scope stdout stderr
-              call-expression (get xs 1) *scope stdout stderr
-            >
-              call-expression (get xs 0) *scope stdout stderr
-              call-expression (get xs 1) *scope stdout stderr
+          defn call-larger (xs scope stdout)
+            assert "\"\"多于\"需二参数" $ = 2 (count xs)
+            let[] (params new-scope) (extract-params xs scope stdout)
+              []
+                > (get params 0) (get params 1)
+                , new-scope
         |call-method $ quote
-          defn call-method (head body scope stdout stderr) (; js/console.log head body)
-            let
-                obj $ call-expression (get body 0) scope stdout stderr
-                method $ aget obj (.slice head 1)
-                args $ -> (.slice body 1)
-                  map $ fn (x) (call-expression x scope stdout stderr)
-              ; js/console.log obj $ .-call method
-              .!apply method obj $ to-js-data args
+          defn call-method (head body scope stdout) (; js/console.log head body)
+            let[] (ret params) (extract-params body scope stdout)
+              let
+                  obj $ get ret 0
+                  method $ aget obj (.slice head 1)
+                  args $ .slice ret 1
+                ; js/console.log obj $ .-call method
+                []
+                  .!apply method obj $ to-js-data args
+                  , scope
         |resolve-literal $ quote
-          defn resolve-literal (token scope stdout stderr) (; println "\"reading literal" token scope)
+          defn resolve-literal (token scope stdout) (; println "\"reading literal" token scope)
             cond
                 = (first token) "\"|"
-                .slice token 1
+                [] (.slice token 1) scope
               (= (first token) "\":")
-                .slice token 1
+                [] (.slice token 1) scope
               (.starts-with? token "\"js/")
-                read-native-fn js/globalThis $ .split (.slice token 3) "\"."
-              (= token "\"实") true
-              (= token "\"虚") false
-              (= token "\"空") nil
-              (re-matches number-pattern token)
-                nzh/decodeS $ .replace token "\"两" "\"二"
-              (contains? scope token) (get scope token)
-              true $ do
-                stderr "\"未知几何也" (pr-str token) &newline
-                , nil
+                []
+                  read-native-fn js/globalThis $ .split (.slice token 3) "\"."
+                  , scope
+              (= token "\"实") ([] true scope)
+              (= token "\"虚") ([] false scope)
+              (= token "\"空") ([] nil scope)
+              (.!test number-pattern token)
+                []
+                  nzh/decodeS $ .replace token "\"两" "\"二"
+                  , scope
+              (contains? scope token)
+                [] (get scope token) scope
+              true $ raise
+                str "\"未知几何也" $ pr-str token
         |call-native $ quote
-          defn call-native (head body *scope stdout stderr)
-            let
-                method $ .slice head 3
-                f $ read-native-fn js/globalThis (.split method "\".")
-              if (fn? f)
-                let
-                    args $ new js/Array
-                  &doseq
-                    x $ -> body
-                      map $ fn (x) (call-expression x *scope stdout stderr)
-                    .!push args x
-                  .!apply f nil args
-                do
-                  stderr $ str "\"不知其术: " head "\" " (pr-str f)
-                  , nil
+          defn call-native (head body scope stdout)
+            let[] (params new-scope) (extract-params body scope stdout)
+              let
+                  method $ .slice head 3
+                  f $ read-native-fn js/globalThis (.split method "\".")
+                if (fn? f)
+                  let
+                      args $ new js/Array
+                    &doseq (x params) (.!push args x)
+                    [] (.!apply f nil args) new-scope
+                  raise $ str "\"不知其术: " head "\" " (pr-str f)
         |call-negate $ quote
-          defn call-negate (x *scope stdout stderr)
-            let
-                v $ call-expression x *scope stdout stderr
-              - v
+          defn call-negate (x scope stdout)
+            let[] (v new-scope) (call-expression x scope stdout)
+              [] (negate v) new-scope
         |scope-get $ quote
           defn scope-get (*scope x)
             assert "\"*scope should be an atom" $ ref? *scope
@@ -649,7 +694,8 @@
             reset! *reel $ reel-updater updater @*reel op op-data
         |reload! $ quote
           defn reload! () $ if (some? build-errors) (hud! "\"error" build-errors)
-            do (hud! "\"inactive" nil) (clear-cache!)
+            do (hud! "\"inactive" nil) (remove-watch *reel :changes) (clear-cache!)
+              add-watch *reel :changes $ fn (reel p) (render-app!)
               reset! *reel $ refresh-reel @*reel schema/store updater
               println "|Code updated."
     |app.test $ {}
