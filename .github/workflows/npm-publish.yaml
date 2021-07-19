@@ -14,14 +14,42 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: docker://timbru31/java-node:latest
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 16
           registry-url: https://registry.npmjs.org/
 
+      - name: ACTIONS_ALLOW_UNSECURE_COMMANDS
+        id: ACTIONS_ALLOW_UNSECURE_COMMANDS
+        run: echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
+
+      - name: add cr
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/bin
+          wget -O $GITHUB_WORKSPACE/bin/cr http://repo.calcit-lang.org/binaries/linux/cr
+          chmod +x $GITHUB_WORKSPACE/bin/cr
+          echo "::add-path::$GITHUB_WORKSPACE/bin"
+
+      - name: "prepare modules"
+        run: >
+          mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
+          && git clone https://github.com/calcit-lang/lilac.git
+          && git clone https://github.com/calcit-lang/memof.git
+          && git clone https://github.com/Respo/respo.calcit.git
+          && git clone https://github.com/Respo/reel.calcit.git
+          && git clone https://github.com/Respo/respo-markdown.calcit.git
+          && git clone https://github.com/Respo/respo-ui.calcit.git
+          && git clone https://github.com/calcit-lang/calcit-test
+
       - name: build assets
-        run: 'yarn && yarn compile'
+        run: >
+          yarn && yarn compile-test && yarn webpack && node js-out/bundle.js
+
+      - name: build cli
+        run: >
+          rm -rfv dist/
+          && yarn compile-cli && entry=./cli.js out=dist/ yarn webpack
+          && cp entry/bin.js dist/
 
       - name: publish
         run: npm publish

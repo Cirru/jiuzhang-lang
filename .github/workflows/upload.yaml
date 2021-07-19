@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: docker://timbru31/java-node:latest
 
       - name: Get yarn cache
         id: yarn-cache
@@ -26,23 +25,37 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Cache Clojars
-        uses: actions/cache@v1
-        env:
-          cache-name: cache-clojars
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('shadow-cljs.edn') }}
-          restore-keys: |
-            ${{ runner.os }}-clojars
+      - name: ACTIONS_ALLOW_UNSECURE_COMMANDS
+        id: ACTIONS_ALLOW_UNSECURE_COMMANDS
+        run: echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
+
+      - name: add cr
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/bin
+          wget -O $GITHUB_WORKSPACE/bin/cr http://repo.calcit-lang.org/binaries/linux/cr
+          chmod +x $GITHUB_WORKSPACE/bin/cr
+          echo "::add-path::$GITHUB_WORKSPACE/bin"
+
+      - name: "prepare modules"
+        run: >
+          mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
+          && git clone https://github.com/calcit-lang/lilac.git
+          && git clone https://github.com/calcit-lang/memof.git
+          && git clone https://github.com/Respo/respo.calcit.git
+          && git clone https://github.com/Respo/reel.calcit.git
+          && git clone https://github.com/Respo/respo-markdown.calcit.git
+          && git clone https://github.com/Respo/respo-ui.calcit.git
+          && git clone https://github.com/calcit-lang/calcit-test
 
       - run: yarn
 
-      - run: yarn shadow-cljs compile test && node target/test.js
-        name: Running tests
+      - run: >
+          yarn compile-test && yarn webpack && node js-out/bundle.js
 
-      - run: yarn build
-        name: Build web assets
+      - name: "compiles to js"
+        run: >
+          cr --emit-js --once
+          && yarn vite build --base=./
 
       - name: Deploy to server
         id: deploy

@@ -8,9 +8,9 @@
 
 Previews http://jiuzhang.cirru.org/ .
 
-Originals http://www.guoxue123.com/zhibu/0201/04jzsj/index.htm .
+Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 
-> 昔在包犧氏始畫八卦，以通神明之德，以類萬物之情，作九九之術以合六爻之變。暨於黃帝神而化之，引而伸之，於是建曆紀，協律呂，用稽道原，然後兩儀四象精微之氣可得而效焉。記稱隸首作數，其詳未之聞也。按周公制禮而有九數，九數之流，則九章是矣。
+> 昔在庖牺氏始画八卦，以通神明之德，以类万物之情，作九九之术，以合六爻之变。暨于黄帝神而化之，引而伸之，于是建历纪，恊律吕，用稽道原，然后两仪四象精微之气可得而效焉。记称“隶首作数”，其详未之闻也。按周公制礼而有九数，九数之流，则《九章》是矣。
 
 ### Usage
 
@@ -153,7 +153,7 @@ jiuzhang demo.cirru
 
 ### Workflow
 
-Workflow https://github.com/mvc-works/calcit-workflow
+https://github.com/calcit-lang/respo-calcit-workflow
 
 ### License
 
