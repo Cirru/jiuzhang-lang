@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: docker://timbru31/java-node:latest
 
       - name: Get yarn cache
         id: yarn-cache
