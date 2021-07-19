@@ -9723,6 +9723,14 @@
                 :type :expr
                 :at 1626627153292
                 :by |rJG4IHzWf
+              |t $ {}
+                :data $ {}
+                  |T $ {} (:text |reset!) (:type :leaf) (:at 1626699713236) (:by |rJG4IHzWf)
+                  |j $ {} (:text |*quit-on-failure?) (:type :leaf) (:at 1626699747234) (:by |rJG4IHzWf)
+                  |r $ {} (:text |true) (:type :leaf) (:at 1626699718670) (:by |rJG4IHzWf)
+                :type :expr
+                :at 1626699711400
+                :by |rJG4IHzWf
               |v $ {}
                 :data $ {}
                   |T $ {} (:text |test-fibo) (:type :leaf) (:at 1626627198864) (:by |rJG4IHzWf)
@@ -10296,6 +10304,7 @@
                         |r $ {} (:text |is) (:type :leaf) (:at 1577893560373) (:by |rJG4IHzWf) (:id |-xR4LRR4)
                         |v $ {} (:text |testing) (:type :leaf) (:at 1577893561913) (:by |rJG4IHzWf) (:id |O4f0AlVHj)
                         |x $ {} (:text |run-tests) (:type :leaf) (:at 1577893564444) (:by |rJG4IHzWf) (:id |XOiR8N5RR)
+                        |y $ {} (:text |*quit-on-failure?) (:type :leaf) (:at 1626699745238) (:by |rJG4IHzWf)
                       :type :expr
                       :at 1577893557468
                       :by |rJG4IHzWf

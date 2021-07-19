@@ -711,14 +711,14 @@
     |app.test $ {}
       :ns $ quote
         ns app.test $ :require
-          [] calcit-test.core :refer $ [] deftest is testing run-tests
+          [] calcit-test.core :refer $ [] deftest is testing run-tests *quit-on-failure?
           [] "\"fs" :as fs
           [] "\"path" :as path
           [] app.program :refer $ [] run-program
       :defs $ {}
         |*log-result $ quote (defatom *log-result "\"")
         |run-tests! $ quote
-          defn run-tests! () (test-fibo) (test-data) (test-fn) (test-if) (test-list) (test-math) (test-native-api) (test-variables)
+          defn run-tests! () (reset! *quit-on-failure? true) (test-fibo) (test-data) (test-fn) (test-if) (test-list) (test-math) (test-native-api) (test-variables)
         |test-data $ quote
           deftest test-data $ testing "\"聚物于列于置"
             is $ = (load-log "\"data.log") (eval-out "\"data.cirru")
