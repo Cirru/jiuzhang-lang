@@ -1,6 +1,6 @@
 {
   "name": "@cirru/jiuzhang",
-  "version": "0.0.3-a3",
+  "version": "0.0.3-a4",
   "description": "ClojureScript workflow using Calcit Editor",
   "main": "index.js",
   "scripts": {
@@ -13,8 +13,8 @@
     "release-server": "webpack"
   },
   "bin": {
-    "jiuzhang": "./bin/bundle.js",
-    "9c": "./bin/bundle.js"
+    "jiuzhang": "./dist/bundle.js",
+    "9c": "./dist/bundle.js"
   },
   "repository": {
     "type": "git",

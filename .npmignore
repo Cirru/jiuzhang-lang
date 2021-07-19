@@ -24,4 +24,4 @@ cli.js
 test.js
 .gitattributes
 
-bin/
+bin/*
