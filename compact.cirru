@@ -264,7 +264,7 @@
             assert "\"\"少于\"需二参数" $ = 2 (count xs)
             let[] (params new-scope) (extract-params xs scope stdout)
               []
-                < (get params 0) (get xs 1)
+                < (get params 0) (get params 1)
                 , new-scope
         |scope-contains? $ quote
           defn scope-contains? (*scope x)
@@ -278,8 +278,7 @@
               let
                   f $ get scope head
                 ; println "\"*scope" @scope f
-                if (fn? f)
-                  [] (f & params) new-scope
+                if (fn? f) (f & params)
                   raise $ str "\"未有法也, 得" (pr-str head) "\"乃" f
         |call-defn $ quote
           defn call-defn (body parent-scope stdout)
@@ -305,12 +304,13 @@
                               assoc s (first params) (get ys idx)
                               rest params
                               inc idx
-                      apply-args (nil scope f-body)
+                        scope-inner $ assoc scope f-name f
+                      apply-args (nil scope-inner f-body)
                         fn (ret s xs)
                           if (empty? xs) ([] ret s)
                             let[] (v s2)
                               call-expression (first xs) s stdout
-                              recur v s2 $ rest f-body
+                              recur v s2 $ rest xs
                 [] f $ assoc parent-scope f-name f
         |call-host $ quote
           defn call-host (head body scope stdout)
@@ -455,7 +455,7 @@
                         if (empty? xs) ([] ret s)
                           let[] (v s2)
                             call-expression (first xs) s stdout
-                            recur v s2 $ rest f-body
+                            recur v s2 $ rest xs
                 , parent-scope
         |call-if $ quote
           defn call-if (body scope stdout)
@@ -475,13 +475,13 @@
           defn extract-params (xs scope stdout)
             apply-args
                 []
-                , scope xs
-              fn (acc scope params)
+                , xs
+              fn (acc params)
                 if (empty? params) ([] acc scope)
                   let-sugar
                       p0 $ first params
                       ([] ret new-scope) (call-expression p0 scope stdout)
-                    recur (conj acc ret) new-scope $ rest params
+                    recur (conj acc ret) (rest params)
         |call-multiply $ quote
           defn call-multiply (xs scope stdout)
             let[] (params new-scope) (extract-params xs scope stdout)
@@ -519,7 +519,7 @@
             assert "\"\"其\"需二参数" $ = 2 (count xs)
             let[] (params new-scope) (extract-params xs scope stdout)
               []
-                filter (nth xs 0) (nth xs 1)
+                filter (nth params 0) (nth params 1)
                 , new-scope
         |global-object $ quote
           def global-object $ cond
