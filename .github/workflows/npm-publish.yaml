@@ -43,11 +43,11 @@ jobs:
 
       - name: build assets
         run: >
-          cr --emit-js --entry test -1 && node test.mjs
+          yarn && cr --emit-js --entry test -1 && node test.mjs
 
       - name: build cli
         run: >
-          rm -rfv dist/
+          rm -rfv dist/ js-out/
           && cr --emit-js --entry cli -1
 
       - name: publish
