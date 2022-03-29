@@ -31,6 +31,11 @@
   resolved "https://registry.yarnpkg.com/@mvc-works/codearea/-/codearea-0.0.3.tgz#88c2d0ae0644f9053adce423f9dc1bcba773adbe"
   integrity sha512-gqPQ/PIwsqoI9mF09NDMiFd5OtKMfS4QAEYvDdrE0FzE4XoiUph3S/pGHfmzErncCdGxNtix4Q7iyvRe3qB/zA==
 
+"@tiye/nzh@0.0.1-a2":
+  version "0.0.1-a2"
+  resolved "https://registry.yarnpkg.com/@tiye/nzh/-/nzh-0.0.1-a2.tgz#a257df10c9c5fcd806fec08fd8a9806bc79990d2"
+  integrity sha512-1a14dqEaS3O5M96Wp8jogmysxnmsKOi9E+42uwaFJUAXBZT4rnbj88H0AgP5AoxFWoCAXMcQoWZXxENB8hgzkA==
+
 bottom-tip@^0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/bottom-tip/-/bottom-tip-0.1.3.tgz#ad3a4bcc8c3d5b5c6dac68fd3d140bf18efc50f8"
@@ -263,10 +268,6 @@ next-tick@^0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/next-tick/-/next-tick-0.2.2.tgz#75da4a927ee5887e39065880065b7336413b310d"
   integrity sha1-ddpKkn7liH45BliABltzNkE7MQ0=
-
-"nzh@git+ssh://git@github.com:tiye/nzh.git#mjs":
-  version "1.0.8"
-  resolved "git+ssh://git@github.com:tiye/nzh.git#562233a1fbcd8232e53eff7f92ce1bfb5fce57fc"
 
 path-parse@^1.0.7:
   version "1.0.7"

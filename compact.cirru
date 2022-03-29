@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |calcit-test/
-    :version |0.0.4-a1
+    :version |0.0.4-a2
   :entries $ {}
     :test $ {} (:reload-fn |app.test/reload!) (:init-fn |app.test/main!)
       :modules $ [] |lilac/ |memof/ |calcit-test/
@@ -147,7 +147,7 @@
             :result "\""
     |app.program $ {}
       :ns $ quote
-        ns app.program $ :require ("\"nzh/cn.mjs" :default nzh)
+        ns app.program $ :require ("\"@tiye/nzh/cn.mjs" :default nzh)
       :defs $ {}
         |call-equal $ quote
           defn call-equal (xs scope stdout)

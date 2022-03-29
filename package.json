@@ -1,6 +1,6 @@
 {
   "name": "@cirru/jiuzhang",
-  "version": "0.0.4-a1",
+  "version": "0.0.4-a2",
   "description": "九章(jiuzhang) dialect",
   "main": "index.js",
   "scripts": {
@@ -26,6 +26,6 @@
   "dependencies": {
     "@calcit/procs": "^0.5.28",
     "chalk": "^5.0.1",
-    "nzh": "github:tiye/nzh#mjs"
+    "@tiye/nzh": "0.0.1-a2"
   }
 }
