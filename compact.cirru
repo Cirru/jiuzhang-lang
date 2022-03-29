@@ -3,6 +3,11 @@
   :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |calcit-test/
     :version |0.0.3-a2
+  :entries $ {}
+    :test $ {} (:reload-fn |app.test/reload!) (:init-fn |app.test/main!)
+      :modules $ [] |lilac/ |memof/ |calcit-test/
+    :cli $ {} (:reload-fn |app.cli/reload!) (:init-fn |app.cli/main!)
+      :modules $ [] |lilac/ |memof/
   :files $ {}
     |app.comp.container $ {}
       :ns $ quote
@@ -142,7 +147,7 @@
             :result "\""
     |app.program $ {}
       :ns $ quote
-        ns app.program $ :require ("\"nzh/cn" :as nzh)
+        ns app.program $ :require ("\"nzh/cn.mjs" :default nzh)
       :defs $ {}
         |call-equal $ quote
           defn call-equal (xs scope stdout)
@@ -179,7 +184,7 @@
           defn format-value (x)
             cond
                 number? x
-                nzh/encodeS x
+                .!encodeS nzh x
               (string? x)
                 if (.test simple-str-pattern x) (str "\"|" x)
                   str "\"\"|" $ .slice (pr-str x) 1
@@ -319,7 +324,7 @@
                 [] f $ assoc parent-scope f-name f
         |call-host $ quote
           defn call-host (head body scope stdout)
-            let[] (params new-scope) (extract-params body scope)
+            let[] (params new-scope) (extract-params body scope stdout)
               let
                   method $ .slice head 4
                   f $ case-default method (do nil) ("\"九章->js" to-js-data) ("\"js->九章" to-cirru-edn)
@@ -574,7 +579,7 @@
               (= token "\"空") ([] nil scope)
               (.!test number-pattern token)
                 []
-                  nzh/decodeS $ .replace token "\"两" "\"二"
+                  .!decodeS nzh $ .replace token "\"两" "\"二"
                   , scope
               (contains? scope token)
                 [] (get scope token) scope
@@ -658,6 +663,8 @@
             let
                 source $ fs/readFileSync entry-file "\"utf8"
               let[] (ret logs) (run-program source) (println logs)
+        |reload! $ quote
+          defn reload! () $ println "\"TODO"
     |app.main $ {}
       :ns $ quote
         ns app.main $ :require
@@ -715,6 +722,7 @@
           [] "\"fs" :as fs
           [] "\"path" :as path
           [] app.program :refer $ [] run-program
+          "\"url" :as url
       :defs $ {}
         |*log-result $ quote (defatom *log-result "\"")
         |run-tests! $ quote
@@ -742,17 +750,19 @@
         |test-variables $ quote
           deftest test-variables $ testing "\"数有其名也"
             is $ = (load-log "\"math.log") (eval-out "\"math.cirru")
+        |__dirname $ quote
+          def __dirname $ path/dirname (url/fileURLToPath js/import.meta.url)
         |eval-out $ quote
           defn eval-out (x)
             let
-                source $ fs/readFileSync (path/join js/__dirname "\"../tests" x) "\"utf8"
+                source $ fs/readFileSync (path/join __dirname "\"../tests" x) "\"utf8"
               let[] (ret logs) (run-program source) (.trim logs)
         |test-native-api $ quote
           deftest test-native-api $ testing "\"用平台之函数"
             is $ = (load-log "\"native-api.log") (eval-out "\"native-api.cirru")
         |load-log $ quote
           defn load-log (x)
-            .trim $ fs/readFileSync (path/join js/__dirname "\"../tests" x) "\"utf8"
+            .trim $ fs/readFileSync (path/join __dirname "\"../tests" x) "\"utf8"
         |reload! $ quote
           defn reload! () (println "\"Reloaded") (run-tests!)
     |app.config $ {}

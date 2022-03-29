@@ -43,13 +43,12 @@ jobs:
 
       - name: build assets
         run: >
-          yarn && yarn compile-test && yarn webpack && node js-out/bundle.js
+          cr --emit-js --entry test -1 && node test.mjs
 
       - name: build cli
         run: >
           rm -rfv dist/
-          && yarn compile-cli && entry=./cli.js out=dist/ yarn webpack
-          && cp entry/bin.js dist/
+          && cr --emit-js --entry cli -1
 
       - name: publish
         run: npm publish
