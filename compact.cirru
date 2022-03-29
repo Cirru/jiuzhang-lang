@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |calcit-test/
-    :version |0.0.3-a2
+    :version |0.0.4-a1
   :entries $ {}
     :test $ {} (:reload-fn |app.test/reload!) (:init-fn |app.test/main!)
       :modules $ [] |lilac/ |memof/ |calcit-test/

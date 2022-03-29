@@ -10479,7 +10479,7 @@
           :at 1527788237503
           :by |root
           :id |BJlrAf2TyX
-  :configs $ {} (:reload-fn |app.main/reload!) (:port 6001) (:version |0.0.3-a2)
+  :configs $ {} (:reload-fn |app.main/reload!) (:port 6001) (:version |0.0.4-a1)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |calcit-test/
     :init-fn |app.main/main!
   :entries $ {}
