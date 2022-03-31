@@ -50,7 +50,7 @@ jobs:
       - run: yarn
 
       - run: >
-          yarn compile-test && yarn webpack && node js-out/bundle.js
+          cr --emit-js --entry test -1 && node test.mjs
 
       - name: "compiles to js"
         run: >

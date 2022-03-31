@@ -1,7 +1,7 @@
 
 book/
 cli/
-entry/
+assets/
 src/
 calcit.cirru
 shadow-cljs.edn
@@ -9,7 +9,6 @@ upload.edn
 yarn.lock
 .shadow-cljs/
 tests/
-js-out/
 .github/
 
 index.html
