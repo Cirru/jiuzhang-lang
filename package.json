@@ -23,7 +23,7 @@
     "vite": "^8.2.2"
   },
   "dependencies": {
-    "@calcit/procs": "0.13.77",
+    "@calcit/procs": "0.13.78",
     "@tiye/nzh": "0.0.1-a2",
     "chalk": "^5.0.1",
     "cirru-color": "^0.2.4",
