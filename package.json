@@ -2,7 +2,6 @@
   "name": "@cirru/jiuzhang",
   "version": "0.0.4-a2",
   "description": "九章(jiuzhang) dialect",
-  "main": "index.js",
   "scripts": {
     "watch-page": "calcit calcit.cirru --watch",
     "release-page": "vite build --base=./"
@@ -26,7 +25,10 @@
   "dependencies": {
     "@calcit/procs": "0.13.77",
     "@tiye/nzh": "0.0.1-a2",
-    "chalk": "^5.0.1"
+    "chalk": "^5.0.1",
+    "cirru-color": "^0.2.4",
+    "copy-text-to-clipboard": "^3.2.2",
+    "dayjs": "^1.11.23"
   },
   "engines": {
     "node": ">=24"

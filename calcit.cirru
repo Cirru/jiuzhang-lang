@@ -19,12 +19,14 @@
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! () $ let
-                entry-file $ aget js/process.argv 2
-              when (nil? entry-file) (println "|No file name") (js/process.exit 1)
-              when-not (fs/existsSync entry-file) (println entry-file "|does not exist") (js/process.exit 1)
+                entry-file $ aget (unsafe-coerce js/process.argv JsObject) 2
+              when (js-nullish? entry-file) (println "|No file name") (js/process.exit 1)
               let
-                  source $ fs/readFileSync entry-file |utf8
-                let[] (ret logs) (run-program source) (println logs)
+                  entry-path $ unsafe-coerce entry-file String
+                when-not (fs/existsSync entry-path) (println entry-path "|does not exist") (js/process.exit 1)
+                let
+                    source $ fs/readFileSync entry-path |utf8
+                  let[] (ret logs) (run-program source) (println logs)
           :examples $ []
           :schema $ :: 'Dynamic
         'reload! $ %{} 'CodeEntry (:doc |)
@@ -45,8 +47,12 @@
           :code $ quote
             defcomp comp-container (reel)
               let
-                  store $ :store reel
-                  states $ :states store
+                  store $
+                    get (unsafe-coerce reel Dynamic) :store
+                    , .unwrap-or ({})
+                  states $
+                    get store :states
+                    , .unwrap-or ({})
                 div
                   {} $ :style (merge ui/global ui/fullscreen)
                   div
@@ -98,9 +104,22 @@
           :code $ quote
             defcomp comp-runner (states title code0)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states)
-                    {} (:code code0) (:result "|按 \"点击按钮运行\"") (:error |)
+                  cursor $
+                    get states :cursor
+                    , .unwrap-or ([])
+                  state $
+                    get states :data
+                    , .unwrap-or
+                      {} (:code code0) (:result "|按 \"点击按钮运行\"") (:error |)
+                  code $
+                    get state :code
+                    , .unwrap-or code0
+                  error $
+                    get state :error
+                    , .unwrap-or |
+                  result $
+                    get state :result
+                    , .unwrap-or |
                 [] (effect-codearea)
                   div
                     {} $ :style
@@ -112,16 +131,14 @@
                     =< nil 8
                     div
                       {} $ :style (merge ui/row)
-                      textarea $ {}
-                        :value $ :code state
-                        :class-name |source-code
-                        :placeholder |Content
+                      textarea $ {} (:value code) (:class-name |source-code) (:placeholder |Content)
                         :style $ merge ui/expand ui/textarea
                           {} (:font-family ui/font-code) (:min-height 320)
                             :border $ str "|1px solid " (hsl 0 0 93)
                             :background-color :white
                         :on-input $ fn (e d!)
-                          d! cursor $ assoc state :code (:value e)
+                          d! cursor $ assoc state :code
+                            (get e :value) .unwrap-or |
                       =< 16 nil
                       div
                         {} $ :style ui/expand
@@ -131,40 +148,37 @@
                           a $ {} (:inner-text "|运行") (:style ui/link)
                             :on-click $ fn (e d!)
                               try
-                                let[] (ret out)
-                                  run-program $ :code state
-                                  println |Result: ret
+                                let[] (ret out) (run-program code) (println |Result: ret)
                                   d! cursor $ merge state
                                     {} (:result out) (:error nil)
                                 fn (err)
                                   d! cursor $ merge state
                                     {} (:result nil)
                                       :error $ str err
-                          if
-                            not= (:code state) code0
+                          if (not= code code0)
                             a $ {} (:inner-text "|重置") (:style ui/link)
                               :on-click $ fn (e d!)
                                 d! cursor $ merge state
                                   {} (:code code0) (:result |) (:error |)
-                        if-not
-                          blank? $ :error state
+                        if-not (blank? error)
                           pre $ {}
                             :style $ {} (:background-color :transparent) (:color :red)
-                            :inner-text $ :error state
+                            :inner-text error
                         pre $ {}
                           :style $ {} (:background-color :transparent)
-                          :inner-text $ :result state
+                          :inner-text result
           :examples $ []
           :schema $ :: 'Dynamic
         'effect-codearea $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defeffect effect-codearea () (action el)
-              codearea $ .querySelector el |.source-code
+              codearea $ .querySelector (unsafe-coerce el JsObject) |.source-code
           :examples $ []
           :schema $ :: 'Dynamic
         'inline $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defmacro inline (path) (read-file path)
+            defmacro inline (path)
+              read-file $ str path
           :examples $ []
           :schema $ :: 'Macro
             {}
@@ -191,7 +205,8 @@
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def dev? $ = |dev (get-env |mode)
+            def dev? $ = |dev
+              (get-env |mode) .unwrap-or |release
           :examples $ []
           :schema $ :: 'Dynamic
         'site $ %{} 'CodeEntry (:doc |)
@@ -212,7 +227,7 @@
           :code $ quote
             defn main! () $ let
                 content $ fs/readFileSync "|./九章算术.txt" |utf8
-                chars $ .split content |
+                chars $ split content |
                 collected $ -> chars
                   map-indexed $ fn (idx x)
                     str x $ get chars (inc idx)
@@ -228,7 +243,7 @@
                 map-kv $ fn (c n) (str c "| " n)
                 .to-list
                 take 100
-                .join-str &newline
+                join-str &newline
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
@@ -243,11 +258,9 @@
           :schema $ :: 'Dynamic
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn dispatch! (op op-data)
-              when
-                and config/dev? (not= op :hydrate-storage) (not= op :states)
-                println |Dispatch: op
-              reset! *reel $ reel-updater updater @*reel op op-data
+            defn dispatch! (op)
+              when config/dev? $ println |Dispatch: op
+              reset! *reel $ reel-updater updater @*reel op
           :examples $ []
           :schema $ :: 'Dynamic
         'main! $ %{} 'CodeEntry (:doc |)
@@ -329,10 +342,12 @@
             defn call-call (head body scope stdout)
               let[] (params new-scope) (extract-params body scope stdout)
                 let
-                    f $ get scope head
+                    f $
+                      get scope head
+                      , .unwrap-or nil
                   ; println |*scope @scope f
                   if (fn? f) (f & params)
-                    raise $ str "|未有法也, 得" (pr-str head) "|乃" f
+                    raise $ str "|未有法也, 得" (turn-string head) "|乃" f
           :examples $ []
           :schema $ :: 'Dynamic
         'call-define $ %{} 'CodeEntry (:doc |)
@@ -350,25 +365,31 @@
           :code $ quote
             defn call-defn (body parent-scope stdout)
               let
-                  f-name $ get body 0
-                  f-params $ get body 1
-                  f-body $ .slice body 2
+                  f-name $
+                    get body 0
+                    , .unwrap
+                  f-params $
+                    get body 1
+                    , .unwrap
+                  f-body $ slice body 2
                 when-not (string? f-name)
-                  raise $ str "|未知" (pr-str f-name)
+                  raise $ str "|未知" (turn-string f-name)
                 when-not (every? f-params string?)
-                  raise $ str "|未知" (pr-str f-params)
+                  raise $ str "|未知" (turn-string f-params)
                 when (empty? f-body)
                   raise $ str "|未有函数体"
                 let
                     f $ fn (& ys)
                       when-not
                         = (count ys) (count f-params)
-                        raise $ str "|长度未相符" (pr-str ys) (pr-str f-params)
+                        raise $ str "|长度未相符" (turn-string ys) (turn-string f-params)
                       let
                           scope $ apply-args (parent-scope f-params 0)
                             fn (s params idx)
                               if (empty? params) s $ recur
-                                assoc s (first params) (get ys idx)
+                                assoc s
+                                  (first params) .unwrap
+                                  (get ys idx) .unwrap
                                 rest params
                                 inc idx
                           scope-inner $ assoc scope f-name f
@@ -376,7 +397,10 @@
                           fn (ret s xs)
                             if (empty? xs) ([] ret s)
                               let[] (v s2)
-                                call-expression (first xs) s stdout
+                                call-expression
+                                    first xs
+                                    , .unwrap
+                                  , s stdout
                                 recur v s2 $ rest xs
                   [] f $ assoc parent-scope f-name f
           :examples $ []
@@ -389,15 +413,18 @@
                   [] 1 scope
                 (= 1 (count body))
                   let[] (v new-scope)
-                    call-expression (first body) scope stdout
+                    call-expression
+                        first body
+                        , .unwrap
+                      , scope stdout
                     [] (/ 1 v) new-scope
                 true $ let[] (params new-scope) (extract-params body scope stdout)
                   let
-                      x0 $ first params
+                      x0 $
+                        first params
+                        , .unwrap
                       delta $ + & (rest params)
-                    []
-                      &/ (first params) delta
-                      , new-scope
+                    [] (&/ x0 delta) new-scope
           :examples $ []
           :schema $ :: 'Dynamic
         'call-do $ %{} 'CodeEntry (:doc |)
@@ -407,7 +434,10 @@
                 fn (ret s xs)
                   if (empty? xs) ([] ret s)
                     let[] (v s2)
-                      call-expression (first xs) s stdout
+                      call-expression
+                          first xs
+                          , .unwrap
+                        , s stdout
                       recur v s2 $ rest xs
           :examples $ []
           :schema $ :: 'Dynamic
@@ -429,21 +459,27 @@
                   resolve-literal expr scope stdout
                 (list? expr)
                   let
-                      head $ first expr
-                      x1 $ get expr 1
-                      x2 $ get expr 2
-                      body $ .slice expr 1
+                      head $
+                        first expr
+                        , .unwrap
+                      x1 $
+                        get expr 1
+                        , .unwrap-or nil
+                      x2 $
+                        get expr 2
+                        , .unwrap-or nil
+                      body $ slice expr 1
                     cond
                         string? head
                         case-default head
                           cond
-                              .starts-with? head |.
+                              starts-with? head |.
                               call-method head body scope stdout
-                            (.starts-with? head |js/) (call-native head body scope stdout)
-                            (.starts-with? head |clj/) (call-host head body scope stdout)
+                            (starts-with? head |js/) (call-native head body scope stdout)
+                            (starts-with? head |clj/) (call-host head body scope stdout)
                             (contains? scope head) (call-call head body scope stdout)
                             true $ raise
-                              str "|未有术也, 不知" $ pr-str head
+                              str "|未有术也, 不知" $ turn-string head
                           "|今有" $ call-define x1 x2 scope stdout
                           "|有" $ call-define x1 x2 scope stdout
                           "|又有" $ call-define x1 x2 scope stdout
@@ -477,11 +513,11 @@
                           "|案" $ [] nil scope
                           "|又按" $ [] nil scope
                       (list? head)
-                        raise $ str "|未有术也, 不知" (pr-str head)
+                        raise $ str "|未有术也, 不知" (turn-string head)
                       true $ raise
-                        str "|未知几何也" $ pr-str expr
+                        str "|未知几何也" $ turn-string expr
                 true $ raise
-                  str "|未知几何也" $ pr-str expr
+                  str "|未知几何也" $ turn-string expr
           :examples $ []
           :schema $ :: 'Dynamic
         'call-filter $ %{} 'CodeEntry (:doc |)
@@ -489,41 +525,53 @@
             defn call-filter (xs scope stdout)
               assert "|\"其\"需二参数" $ = 2 (count xs)
               let[] (params new-scope) (extract-params xs scope stdout)
-                []
-                  filter (nth params 0)
-                    fn (x)
-                      first $
-                        nth params 1
-                        , x
-                  , new-scope
+                let
+                    items $
+                      nth params 0
+                      , .unwrap
+                    f $
+                      nth params 1
+                      , .unwrap
+                  []
+                    filter items $ fn (x)
+                      (first (unsafe-coerce (f x) List))
+                        , .unwrap
+                    , new-scope
           :examples $ []
           :schema $ :: 'Dynamic
         'call-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn call-fn (body parent-scope stdout)
               let
-                  f-params $ get body 0
-                  f-body $ .slice body 1
+                  f-params $
+                    get body 0
+                    , .unwrap
+                  f-body $ slice body 1
                 when-not (every? f-params string?)
-                  raise "|未知" $ pr-str f-params
+                  raise "|未知" $ turn-string f-params
                 when (empty? f-body) (raise "|未有函数体")
                 []
                   fn (& ys)
                     when-not
                       = (count ys) (count f-params)
-                      raise $ str "|长度未相符" (pr-str ys) (pr-str f-params)
+                      raise $ str "|长度未相符" (turn-string ys) (turn-string f-params)
                     let
                         scope $ apply-args (parent-scope f-params 0)
                           fn (s params idx)
                             if (empty? params) s $ recur
-                              assoc s (first params) (get ys idx)
+                              assoc s
+                                (first params) .unwrap
+                                (get ys idx) .unwrap
                               rest params
                               inc idx
                       apply-args (nil scope f-body)
                         fn (ret s xs)
                           if (empty? xs) ([] ret s)
                             let[] (v s2)
-                              call-expression (first xs) s stdout
+                              call-expression
+                                  first xs
+                                  , .unwrap
+                                , s stdout
                               recur v s2 $ rest xs
                   , parent-scope
           :examples $ []
@@ -533,9 +581,17 @@
             defn call-get (xs scope stdout)
               assert "|\"取\"需二参数" $ = 2 (count xs)
               let[] (params new-scope) (extract-params xs scope stdout)
-                []
-                  get (nth params 0) (nth params 1)
-                  , new-scope
+                let
+                    target $
+                      nth params 0
+                      , .unwrap
+                    key $
+                      nth params 1
+                      , .unwrap
+                    value $
+                      get target key
+                      , .unwrap-or nil
+                  [] value new-scope
           :examples $ []
           :schema $ :: 'Dynamic
         'call-hashmap $ %{} 'CodeEntry (:doc |)
@@ -547,13 +603,14 @@
                     map $ fn (pair)
                       when-not
                         = 2 $ count pair
-                        raise $ str "|Invalid length" (count pair) |of (pr-str pair)
+                        raise $ str "|Invalid length" (count pair) |of (turn-string pair)
                       -> pair $ map
                         fn (x)
-                          first $ call-expression x scope stdout
+                          (first (call-expression x scope stdout))
+                            , .unwrap
                     pairs-map
                   , scope
-                raise $ str "|Unknown structure of map" (pr-str xs) &newline
+                raise $ str "|Unknown structure of map" (turn-string xs) &newline
           :examples $ []
           :schema $ :: 'Dynamic
         'call-host $ %{} 'CodeEntry (:doc |)
@@ -561,11 +618,11 @@
             defn call-host (head body scope stdout)
               let[] (params new-scope) (extract-params body scope stdout)
                 let
-                    method $ .slice head 4
+                    method $ slice head 4
                     f $ case-default method (do nil) ("|九章->js" to-js-data) ("|js->九章" to-cirru-edn)
                   if (fn? f)
                     [] (f & params) new-scope
-                    raise $ str "|不知其术: " head "| " (pr-str f)
+                    raise $ str "|不知其术: " head "| " (turn-string f)
           :examples $ []
           :schema $ :: 'Dynamic
         'call-if $ %{} 'CodeEntry (:doc |)
@@ -573,14 +630,19 @@
             defn call-if (body scope stdout)
               assert "|\"若\"需传入\"条件\"及\"结果\"" $ >= (count body) 2
               let
-                  condition $ get body 0
-                  then-part $ get body 1
+                  condition $
+                    get body 0
+                    , .unwrap
+                  then-part $
+                    get body 1
+                    , .unwrap
                   else-part $ if
                     >= (count body) 3
-                    get body 2
+                    (get body 2) .unwrap
                     , nil
                 if
-                  first $ call-expression condition scope stdout
+                    first $ call-expression condition scope stdout
+                    , .unwrap
                   call-expression then-part scope stdout
                   if (nil? else-part) ([] nil scope) (call-expression else-part scope stdout)
           :examples $ []
@@ -591,7 +653,10 @@
               assert "|\"多于\"需二参数" $ = 2 (count xs)
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
-                  > (get params 0) (get params 1)
+                  >
+                      get params 0
+                      , .unwrap
+                    (get params 1) .unwrap
                   , new-scope
           :examples $ []
           :schema $ :: 'Dynamic
@@ -601,7 +666,10 @@
               assert "|\"少于\"需二参数" $ = 2 (count xs)
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
-                  < (get params 0) (get params 1)
+                  <
+                      get params 0
+                      , .unwrap
+                    (get params 1) .unwrap
                   , new-scope
           :examples $ []
           :schema $ :: 'Dynamic
@@ -610,13 +678,18 @@
             defn call-map (xs scope stdout)
               assert "|\"各\"需二参数" $ = 2 (count xs)
               let[] (params new-scope) (extract-params xs scope stdout)
-                []
-                  map (nth params 0)
-                    fn (x)
-                      first $
-                        get params 1
-                        , x
-                  , new-scope
+                let
+                    items $
+                      nth params 0
+                      , .unwrap
+                    f $
+                      nth params 1
+                      , .unwrap
+                  []
+                    map items $ fn (x)
+                      (first (unsafe-coerce (f x) List))
+                        , .unwrap
+                    , new-scope
           :examples $ []
           :schema $ :: 'Dynamic
         'call-method $ %{} 'CodeEntry (:doc |)
@@ -624,12 +697,14 @@
             defn call-method (head body scope stdout) (; js/console.log head body)
               let[] (ret params) (extract-params body scope stdout)
                 let
-                    obj $ get ret 0
-                    method $ aget obj (.slice head 1)
-                    args $ .slice ret 1
+                    obj $
+                      get ret 0
+                      , .unwrap
+                    method $ aget obj (slice head 1)
+                    args $ slice ret 1
                   ; js/console.log obj $ .-call method
                   []
-                    .!apply method obj $ to-js-data args
+                    .?!apply method obj $ to-js-data args
                     , scope
           :examples $ []
           :schema $ :: 'Dynamic
@@ -641,15 +716,18 @@
                   [] 0 scope
                 (= 1 (count body))
                   let[] (ret new-scope)
-                    call-expression (first body) scope stdout
+                    call-expression
+                        first body
+                        , .unwrap
+                      , scope stdout
                     [] (- 0 ret) new-scope
                 true $ let[] (params new-scope) (extract-params body scope stdout)
                   let
-                      x0 $ first params
+                      x0 $
+                        first params
+                        , .unwrap
                       delta $ + & (rest params)
-                    []
-                      - (first params) delta
-                      , new-scope
+                    [] (- x0 delta) new-scope
           :examples $ []
           :schema $ :: 'Dynamic
         'call-multiply $ %{} 'CodeEntry (:doc |)
@@ -664,14 +742,14 @@
             defn call-native (head body scope stdout)
               let[] (params new-scope) (extract-params body scope stdout)
                 let
-                    method $ .slice head 3
-                    f $ read-native-fn js/globalThis (.split method |.)
+                    method $ slice head 3
+                    f $ read-native-fn js/globalThis (split method |.)
                   if (fn? f)
                     let
                         args $ new js/Array
                       &doseq (x params) (.!push args x)
                       [] (.!apply f nil args) new-scope
-                    raise $ str "|不知其术: " head "| " (pr-str f)
+                    raise $ str "|不知其术: " head "| " (turn-string f)
           :examples $ []
           :schema $ :: 'Dynamic
         'call-native-hashmap $ %{} 'CodeEntry (:doc |)
@@ -683,7 +761,7 @@
                   flat-map-structure? body
                 []
                   let[] (params new-scope) (extract-params body scope stdout)
-                    -> params (.section-by 2) (pairs-map)
+                    pairs-map $ section-by params 2
                   , scope
                 raise "|unknown structure for &置"
           :examples $ []
@@ -714,7 +792,7 @@
             defn call-println (xs scope stdout)
               let[] (acc scope) (extract-params xs scope stdout)
                 do
-                  stdout $ -> (map acc format-value) (.join-str "| ")
+                  stdout $ join-str (map acc format-value) "| "
                   [] nil scope
           :examples $ []
           :schema $ :: 'Dynamic
@@ -723,7 +801,9 @@
             defn call-require (xs scope stdout)
               assert "|\"引\"需一参数" $ = 1 (count xs)
               []
-                .!require js/globalThis $ first xs
+                .?!require js/globalThis $
+                  first xs
+                  , .unwrap
                 , scope
           :examples $ []
           :schema $ :: 'Dynamic
@@ -748,7 +828,9 @@
                 fn (acc params)
                   if (empty? params) ([] acc scope)
                     let-sugar
-                        p0 $ first params
+                        p0 $
+                          first params
+                          , .unwrap
                         ([] ret new-scope) (call-expression p0 scope stdout)
                       recur (conj acc ret) (rest params)
           :examples $ []
@@ -761,10 +843,13 @@
                 if
                   = 0 $ .rem size 2
                   let
-                      n $ bit-shr size
+                      n $ bit-shr size 1
                     -> (range n)
                       every? $ fn (i)
-                        string? $ get xs (* 2 i)
+                        match
+                          get xs $ * 2 i
+                          (:some x) (string? x)
+                          (:none) false
                   , false
           :examples $ []
           :schema $ :: 'Dynamic
@@ -775,29 +860,33 @@
                   number? x
                   .!encodeS nzh x
                 (string? x)
-                  if (.test simple-str-pattern x) (str || x)
-                    str "|\"|" $ .slice (pr-str x) 1
+                  if (.!test simple-str-pattern x) (str || x)
+                    str "|\"|" $ slice (turn-string x) 1
                 (map? x)
                   str "|(置 "
                     -> x (.to-list)
                       map $ fn (pair)
                         str "|("
-                          format-value $ first pair
+                          format-value $
+                            first pair
+                            , .unwrap
                           , "| "
-                            format-value $ last pair
+                            format-value $
+                              last pair
+                              , .unwrap
                             , "|)"
-                      .join-str "| "
+                      join-str "| "
                     , "|)"
                 (list? x)
                   str "|(列 "
-                    -> x (map format-value) (.join-str "| ")
+                    join-str (map x format-value) "| "
                     , "|)"
                 (fn? x)
-                  str "|(术 " (pr-str x) "|)"
+                  str "|(术 " (turn-string x) "|)"
                 (= x true) "|实"
                 (= x false) "|虚"
                 (nil? x) "|空"
-                true $ pr-str x
+                true $ turn-string x
           :examples $ []
           :schema $ :: 'Dynamic
         'global-object $ %{} 'CodeEntry (:doc |)
@@ -820,7 +909,8 @@
               if (empty? xs) o $ if (nil? o)
                 raise $ str "|Failed to load native function:" o xs
                 let
-                    o' $ aget o (first xs)
+                    o' $ aget o
+                      (first xs) .unwrap
                   recur o' $ rest xs
           :examples $ []
           :schema $ :: 'Dynamic
@@ -828,44 +918,51 @@
           :code $ quote
             defn resolve-literal (token scope stdout) (; println "|reading literal" token scope)
               cond
-                  = (first token) ||
-                  [] (.slice token 1) scope
-                (= (first token) |:)
-                  [] (.slice token 1) scope
-                (.starts-with? token |js/)
+                  =
+                      first token
+                      , .unwrap-or |
+                    , ||
+                  [] (slice token 1) scope
+                (= ((first token) .unwrap-or |) |:)
+                  [] (slice token 1) scope
+                (starts-with? token |js/)
                   []
-                    read-native-fn js/globalThis $ .split (.slice token 3) |.
+                    read-native-fn js/globalThis $ split (slice token 3) |.
                     , scope
                 (= token "|实") ([] true scope)
                 (= token "|虚") ([] false scope)
                 (= token "|空") ([] nil scope)
                 (.!test number-pattern token)
                   []
-                    .!decodeS nzh $ .replace token "|两" "|二"
+                    .!decodeS nzh $ .replace (assert-type token String) "|两" "|二"
                     , scope
                 (contains? scope token)
-                  [] (get scope token) scope
+                  []
+                      get scope token
+                      , .unwrap-or nil
+                    , scope
                 true $ raise
-                  str "|未知几何也" $ pr-str token
+                  str "|未知几何也" $ turn-string token
           :examples $ []
           :schema $ :: 'Dynamic
         'run-program $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn run-program (source)
               let
-                  instructions $ parse-cirru source
+                  instructions $ parse-cirru-list source
                   stdout $ fn (& args)
-                    reset! *stdout-logs $ str @*stdout-logs &newline (.join-str args "| ")
+                    reset! *stdout-logs $ str @*stdout-logs &newline (join-str args "| ")
                 reset! *stdout-logs |
-                if
-                  = instructions $ [] ([])
-                  [] nil |
+                if (empty? instructions) ([] nil |)
                   apply-args
                     nil ({}) instructions
                     fn (ret scope xs)
                       if (empty? xs) ([] ret @*stdout-logs)
                         let[] (r next-scope)
-                          call-expression (first xs) scope stdout
+                          call-expression
+                              first xs
+                              , .unwrap
+                            , scope stdout
                           recur r next-scope $ rest xs
           :examples $ []
           :schema $ :: 'Dynamic
@@ -924,13 +1021,13 @@
             defn eval-out (x)
               let
                   source $ fs/readFileSync (path/join __dirname |../tests x) |utf8
-                let[] (ret logs) (run-program source) (.trim logs)
+                let[] (ret logs) (run-program source) (trim logs)
           :examples $ []
           :schema $ :: 'Dynamic
         'load-log $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn load-log (x)
-              .trim $ fs/readFileSync (path/join __dirname |../tests x) |utf8
+              trim $ fs/readFileSync (path/join __dirname |../tests x) |utf8
           :examples $ []
           :schema $ :: 'Dynamic
         'main! $ %{} 'CodeEntry (:doc |)
@@ -1008,13 +1105,14 @@
       :defs $ {}
         'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn updater (store op op-data op-id op-time)
-              case-default op store
-                :states $ update-states store op-data
-                :content $ assoc store :content op-data
-                :result $ assoc store :result op-data
-                :error-result $ assoc store :error-result op-data
-                :hydrate-storage op-data
+            defn updater (store op op-id op-time)
+              match op
+                (:states cursor s) (update-states store cursor s)
+                (:content data) (assoc store :content data)
+                (:result data) (assoc store :result data)
+                (:error-result data) (assoc store :error-result data)
+                (:hydrate-storage data) data
+                _ store
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)

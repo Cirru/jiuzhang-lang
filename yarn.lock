@@ -32,6 +32,9 @@ __metadata:
     "@tiye/nzh": "npm:0.0.1-a2"
     bottom-tip: "npm:^0.1.3"
     chalk: "npm:^5.0.1"
+    cirru-color: "npm:^0.2.4"
+    copy-text-to-clipboard: "npm:^3.2.2"
+    dayjs: "npm:^1.11.23"
     shortid: "npm:^2.2.16"
     vite: "npm:^8.2.2"
   bin:
@@ -237,6 +240,27 @@ __metadata:
   version: 3.0.0
   resolution: "chownr@npm:3.0.0"
   checksum: 10c0/43925b87700f7e3893296c8e9c56cc58f926411cce3a6e5898136daaf08f08b9a8eb76d37d3267e707d0dcc17aed2e2ebdf5848c0c3ce95cf910a919935c1b10
+  languageName: node
+  linkType: hard
+
+"cirru-color@npm:^0.2.4":
+  version: 0.2.4
+  resolution: "cirru-color@npm:0.2.4"
+  checksum: 10c0/2c4e0e1f01d2304aaa7bffe9c75aea04be7c6ea3f45bc03c86bc50efa9c03bf7d4611d1ec2f613610491bd288adb298f7942bfedcb14595dc4c8bde8dfb77104
+  languageName: node
+  linkType: hard
+
+"copy-text-to-clipboard@npm:^3.2.2":
+  version: 3.2.2
+  resolution: "copy-text-to-clipboard@npm:3.2.2"
+  checksum: 10c0/451796734a380f7da7b0af27c4d94e449719d3a2f2170e99c7e46eeee54cf3c4b4fdeabc185f6d6e8cbdf932e350831d05e8387c4bae8dcedb7fb961c600ddd4
+  languageName: node
+  linkType: hard
+
+"dayjs@npm:^1.11.23":
+  version: 1.11.23
+  resolution: "dayjs@npm:1.11.23"
+  checksum: 10c0/69ab04bf19c676e44ab50cc2fca223d265f3dafd107151ef3b0f3ad74d360c37caa602abe62f87cb25d90bd9f6bee003698af47df5b0dbf10a998b7b5f3bb3f1
   languageName: node
   linkType: hard
 

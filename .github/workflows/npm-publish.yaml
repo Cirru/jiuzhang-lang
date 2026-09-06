@@ -5,6 +5,9 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Deploy
@@ -12,43 +15,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
-          node-version: 16
+          persist-credentials: false
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
           registry-url: https://registry.npmjs.org/
 
-      - name: ACTIONS_ALLOW_UNSECURE_COMMANDS
-        id: ACTIONS_ALLOW_UNSECURE_COMMANDS
-        run: echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
-
-      - name: add cr
+      - name: Enable Corepack
         run: |
-          mkdir -p $GITHUB_WORKSPACE/bin
-          wget -O $GITHUB_WORKSPACE/bin/cr https://github.com/calcit-lang/calcit/releases/download/0.6.0/cr
-          chmod +x $GITHUB_WORKSPACE/bin/cr
-          echo "::add-path::$GITHUB_WORKSPACE/bin"
+          corepack enable
+          corepack prepare yarn@4.12.0 --activate
 
-      - name: "prepare modules"
-        run: >
-          mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
-          && git clone https://github.com/calcit-lang/lilac.git
-          && git clone https://github.com/calcit-lang/memof.git
-          && git clone https://github.com/Respo/respo.calcit.git
-          && git clone https://github.com/Respo/reel.calcit.git
-          && git clone https://github.com/Respo/respo-markdown.calcit.git
-          && git clone https://github.com/Respo/respo-ui.calcit.git
-          && git clone https://github.com/calcit-lang/calcit-test
+      - uses: calcit-lang/setup-calcit@704b3f5cd6f9ce3bd1e0c926dbdd1d181adb8180 # v1.4.0
 
-      - name: build assets
-        run: >
-          yarn && cr --emit-js --entry test -1 && node test.mjs
-
-      - name: build cli
-        run: >
-          rm -rfv dist/ js-out/
-          && cr --emit-js --entry cli -1
+      - name: Validate and build CLI
+        run: |
+          yarn install --immutable
+          caps --strict --ci
+          caps verify --toolchain
+          calcit calcit.cirru --entry test --check-only
+          calcit calcit.cirru --entry cli --check-only
+          calcit calcit.cirru --entry test analyze dynamic-methods --max 0
+          calcit calcit.cirru --entry cli analyze dynamic-methods --max 0
+          calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
+          calcit calcit.cirru --entry test js
+          node test.mjs
+          calcit calcit.cirru --entry cli js
 
       - name: publish
         run: npm publish

@@ -8,6 +8,7 @@ shadow-cljs.edn
 upload.edn
 yarn.lock
 .shadow-cljs/
+.yarn/
 tests/
 .github/
 
