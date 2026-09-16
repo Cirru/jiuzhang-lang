@@ -983,9 +983,10 @@
               (= token "|虚") ([] false scope)
               (= token "|空") ([] nil scope)
               (.!test (unsafe-coerce number-pattern RegexHost) token)
-                [] $ .!decodeS (unsafe-coerce nzh NzhHost)
-                  &str:replace (assert-type token String) "|两" "|二"
-                  , scope
+                let
+                    value $ .!decodeS (unsafe-coerce nzh NzhHost)
+                      &str:replace (assert-type token String) "|两" "|二"
+                  [] value scope
               (contains? scope token)
                 []
                     get scope token
@@ -1070,7 +1071,7 @@
         'eval-out $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn eval-out (x)
             let
-                source $ fs/readFileSync (path/join __dirname |../tests x) |utf8
+                source $ fs/readFileSync (path/join |. |tests x) |utf8
               let[] (ret logs) (run-program source) (trim logs)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
@@ -1078,7 +1079,7 @@
             :features $ #{} :js-ffi
         'load-log $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn load-log (x)
-            trim $ fs/readFileSync (path/join __dirname |../tests x) |utf8
+            trim $ fs/readFileSync (path/join |. |tests x) |utf8
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Dynamic
