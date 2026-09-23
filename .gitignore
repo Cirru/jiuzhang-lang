@@ -9,3 +9,5 @@ node_modules/
 dist/
 yarn-error.log
 bin/
+.pnp.cjs
+.pnp.loader.mjs
