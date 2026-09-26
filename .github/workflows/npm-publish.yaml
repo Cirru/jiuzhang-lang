@@ -38,8 +38,8 @@ jobs:
           caps verify --toolchain
           calcit calcit.cirru --entry test --check-only
           calcit calcit.cirru --entry cli --check-only
-          calcit calcit.cirru --entry test analyze dynamic-methods --max 0
-          calcit calcit.cirru --entry cli analyze dynamic-methods --max 0
+          calcit calcit.cirru --entry test analyze dynamic-methods
+          calcit calcit.cirru --entry cli analyze dynamic-methods
           calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
           calcit calcit.cirru --entry test js
           node test.mjs

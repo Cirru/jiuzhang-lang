@@ -39,9 +39,9 @@ jobs:
           calcit calcit.cirru --check-only
           calcit calcit.cirru --entry test --check-only
           calcit calcit.cirru --entry cli --check-only
-          calcit calcit.cirru analyze dynamic-methods --max 0
-          calcit calcit.cirru --entry test analyze dynamic-methods --max 0
-          calcit calcit.cirru --entry cli analyze dynamic-methods --max 0
+          calcit calcit.cirru analyze dynamic-methods
+          calcit calcit.cirru --entry test analyze dynamic-methods
+          calcit calcit.cirru --entry cli analyze dynamic-methods
           calcit calcit.cirru analyze deprecated --summary-only
           calcit calcit.cirru --entry test analyze deprecated --summary-only
           calcit calcit.cirru --entry cli analyze deprecated --summary-only

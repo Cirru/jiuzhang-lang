@@ -182,7 +182,9 @@
           :code $ quote $ defeffect effect-codearea () (action el)
             codearea $ .querySelector (unsafe-coerce el JsObject) |.source-code
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'inline $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defmacro inline (path)
             read-file $ str path
@@ -951,7 +953,9 @@
         'number-pattern $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def number-pattern (new js/RegExp "|[一二两三四五六七八九零十百千万亿负点]+")
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'read-native-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-native-fn (o xs) (; println "|取" xs)
             if (empty? xs) o $ if (nil? o)
@@ -1041,7 +1045,9 @@
         'simple-str-pattern $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def simple-str-pattern (new js/RegExp |[\u4e00-\u9fa5\w\d_\-=\+\?\!\|\.%]+)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.program
           :require $ |@tiye/nzh/cn.mjs :default nzh
