@@ -2,17 +2,25 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 8
+  version: 10
   cacheKey: 10c0
 
-"@calcit/procs@npm:0.18.1":
-  version: 0.18.1
-  resolution: "@calcit/procs@npm:0.18.1"
+"@calcit/finger-vec@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@calcit/finger-vec@npm:0.1.1"
+  checksum: 10c0/c75e7f58924a7bb226ca4a47f6b0702021796b096c04d7fb7e9a92cb49b11ca64d654ea10d78bde29a8ac2d2d05ef9e7865efd2b358af2ca989d950b04d529a8
+  languageName: node
+  linkType: hard
+
+"@calcit/procs@npm:0.30.1-alpha.5":
+  version: 0.30.1-alpha.5
+  resolution: "@calcit/procs@npm:0.30.1-alpha.5"
   dependencies:
+    "@calcit/finger-vec": "npm:0.1.1"
     "@calcit/ternary-tree": "npm:0.0.26"
-    "@cirru/parser.ts": "npm:^0.0.9"
+    "@cirru/parser.ts": "npm:0.0.10"
     "@cirru/writer.ts": "npm:^0.1.9"
-  checksum: 10c0/dc4af8fe80a01e0ddc464596ddec8dd07a02ef14fcd7ac3a9aec6695756516dd3f857e9fa0e3ae0b04ee55355e4f181d7795c8b7d2308da553d0b39e17f2b1c8
+  checksum: 10c0/925226e14b05ab6f1ed5adf32611a3575324d9e99474e84dce6f01093dce4d869d301585bb76c06d56725a716a76536888f99b9da5c961e79c9b0c62a5b27b1c
   languageName: node
   linkType: hard
 
@@ -27,7 +35,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cirru/jiuzhang@workspace:."
   dependencies:
-    "@calcit/procs": "npm:0.18.1"
+    "@calcit/procs": "npm:0.30.1-alpha.5"
     "@mvc-works/codearea": "npm:^0.0.3"
     "@tiye/nzh": "npm:0.0.1-a2"
     bottom-tip: "npm:^0.1.3"
@@ -43,10 +51,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cirru/parser.ts@npm:^0.0.9":
-  version: 0.0.9
-  resolution: "@cirru/parser.ts@npm:0.0.9"
-  checksum: 10c0/3b13623b8f627ac81adae0cb6a4e3664f0da09115a997ca9b78b8d5d0b0f9b9b18c1ad847e068831cb1052c7da2a00329d2af04421b1024a004eef0ddca5fd7a
+"@cirru/parser.ts@npm:0.0.10":
+  version: 0.0.10
+  resolution: "@cirru/parser.ts@npm:0.0.10"
+  checksum: 10c0/d66a16bcf49c60865fb8e733a5c219289a7c755c6400dea7e7a8d3166ee7841a623030f35f8ee96e232bc40f974f1b79a0ccdf089947fc5779699485102b5995
   languageName: node
   linkType: hard
 

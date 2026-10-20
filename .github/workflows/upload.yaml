@@ -13,50 +13,105 @@ permissions:
 jobs:
   upload-assets:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      - uses: actions/setup-node@v6.5.0
         with:
           node-version: 24
+          package-manager-cache: false
 
       - name: Enable Corepack
         run: |
           corepack enable
-          corepack prepare yarn@4.12.0 --activate
+          corepack prepare yarn@4.18.0 --activate
 
-      - uses: calcit-lang/setup-calcit@704b3f5cd6f9ce3bd1e0c926dbdd1d181adb8180 # v1.4.0
+      - uses: calcit-lang/setup-calcit@v1.5.0
+        with:
+          deps-file: deps.cirru
+          tools: calcit,caps
+          caps-version: "0.1.1"
 
       - name: Validate and build
         run: |
+          set -euo pipefail
           yarn install --immutable
           caps --strict --ci
           caps verify --toolchain
           calcit edit format
           git diff --exit-code -- calcit.cirru
-          calcit calcit.cirru --check-only
-          calcit calcit.cirru --entry test --check-only
-          calcit calcit.cirru --entry cli --check-only
+          calcit --check-only --ns 'app.$meta' --ns app.config --ns app.schema --ns app.updater --ns app.comp.container --ns app.main
+          calcit --entry cli --check-only --ns app.cli --ns app.program --ns app.counting
+          calcit --entry test --check-only --ns app.test --ns app.program
+          calcit fix --workflow strict --verify --format edn
           calcit calcit.cirru analyze dynamic-methods --max 0
           calcit calcit.cirru --entry test analyze dynamic-methods --max 0
           calcit calcit.cirru --entry cli analyze dynamic-methods --max 0
-          calcit calcit.cirru analyze deprecated --summary-only
-          calcit calcit.cirru --entry test analyze deprecated --summary-only
-          calcit calcit.cirru --entry cli analyze deprecated --summary-only
+          calcit analyze weak-types --only deprecated-call --format json | jq -e '.data.summary.calls == 0'
           calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
           calcit calcit.cirru --entry test js
           node test.mjs
           calcit calcit.cirru --entry cli js
           node cli.mjs tests/fibo.cirru
           calcit calcit.cirru js
-          yarn vite build --base=./
+
+      - name: Select frontend CDN path
+        id: asset-path
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            asset_prefix="${GITHUB_REPOSITORY}/pr/${PR_NUMBER}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/"
+          else
+            asset_prefix="${GITHUB_REPOSITORY}/"
+          fi
+          base_url="https://cos-sh.tiye.me/${asset_prefix}"
+          echo "prefix=${asset_prefix}" >> "$GITHUB_OUTPUT"
+          echo "base-url=${base_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Build frontend for CDN
+        env:
+          VITE_BASE_URL: ${{ steps.asset-path.outputs.base-url }}
+        run: yarn release-page --base="$VITE_BASE_URL"
+
+      - name: Check COS credentials
+        id: cos-credentials
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          COS_BUCKET: ${{ secrets.COS_BUCKET }}
+          COS_SECRET_ID: ${{ secrets.COS_SECRET_ID }}
+          COS_SECRET_KEY: ${{ secrets.COS_SECRET_KEY }}
+        run: |
+          if [[ -n "$COS_BUCKET" && -n "$COS_SECRET_ID" && -n "$COS_SECRET_KEY" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            echo "::warning::COS credentials unavailable; public upload verification skipped."
+          else
+            echo "::error::COS credentials required before production frontend deployment."
+            exit 1
+          fi
+
+      - name: Upload and verify frontend resources
+        if: steps.cos-credentials.outputs.available == 'true'
+        uses: worktools/cos-upload-action@v1.2.0
+        timeout-minutes: 10
+        with:
+          source-dir: dist
+          bucket: ${{ secrets.COS_BUCKET }}
+          region: ap-shanghai
+          prefix: ${{ steps.asset-path.outputs.prefix }}
+          public-base-url: ${{ steps.asset-path.outputs.base-url }}
+          secret-id: ${{ secrets.COS_SECRET_ID }}
+          secret-key: ${{ secrets.COS_SECRET_KEY }}
 
       - name: Deploy to server
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: deploy
-        uses: Pendect/action-rsyncer@8e05ffa5c93e5d9c9b167796b26044d2c616b2b9 # v2.0.0
+        uses: Pendect/action-rsyncer@v2.0.0
         env:
           DEPLOY_KEY: ${{secrets.rsync_private_key}}
         with:

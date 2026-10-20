@@ -3,8 +3,8 @@
   "version": "0.0.4-a2",
   "description": "九章(jiuzhang) dialect",
   "scripts": {
-    "watch-page": "calcit calcit.cirru --watch",
-    "release-page": "vite build --base=./"
+    "watch-page": "calcit calcit.cirru -w",
+    "release-page": "vite build"
   },
   "bin": {
     "9c": "./cli.mjs",
@@ -23,7 +23,7 @@
     "vite": "^8.2.2"
   },
   "dependencies": {
-    "@calcit/procs": "0.18.1",
+    "@calcit/procs": "0.30.1-alpha.5",
     "@tiye/nzh": "0.0.1-a2",
     "chalk": "^5.0.1",
     "cirru-color": "^0.2.4",
@@ -33,5 +33,5 @@
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "yarn@4.12.0"
+  "packageManager": "yarn@4.18.0"
 }
