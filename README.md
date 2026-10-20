@@ -15,7 +15,8 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 仍是实验原型，不代表重新启动产品维护，也没有发布新的 npm 版本。
 源码使用 `calcit.cirru` 与 `deps.cirru`，不需要 `compact.cirru` 或 `package.cirru`。
 当前 Calcit CLI 与 `@calcit/procs` 配对为 `0.30.1-alpha.5`；正式 `0.30.1`
-尚缺配对发布产物时，不把候选版称作正式版。开发环境为 Node 24、Yarn 4.18.0。
+原 Publish 按上游说明暂停在上传前，等待 #2080 收尾复核，暂用已完成配对的 alpha.5，
+不把候选版称作正式版。开发环境为 Node 24、Yarn 4.18.0。
 
 ```bash
 yarn install --immutable
@@ -35,6 +36,12 @@ CI 按 browser/node 目标分别检查全部项目命名空间，保留质量基
 解释器仍允许异构值；迁移只在函数形参、数值、字符串、集合和宿主能力边界作真实检查，
 不把任意运行期值伪装成静态同构类型。未启用的旧存储注释和无调用内部辅助定义已清理，
 不新增自动保存或改变九章程序格式。
+三个入口均未引用的 Lilac、Memof 已从模块配置和依赖声明退役，避免加载无关旧 API。
+已逐项审阅并获准迁移 comp-container 的两处 Map 状态边界预算；只有该定义的
+schemaDynamic 0→1、unresolved 1→2，其他定义没有增加预算。
+全局上限进一步收紧为 unsafe=0、schemaDynamic=106、unresolved=129、typeNone=1、
+typeNotFull=53、codeNil=23，低于本轮获准的上限；仍保留原质量门禁。
+解释器值的真实异构边界没有清零，不以强转或伪造静态类型满足数字。
 字符串展示修复了空串/空格/标点被截断的问题，含空白文本使用 Calcit 自身的转义表示；
 不影响原有数值、集合和 Fibonacci 示例的输出。
 

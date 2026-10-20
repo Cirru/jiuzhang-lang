@@ -47,9 +47,9 @@ jobs:
           calcit --entry cli --check-only --ns app.cli --ns app.program --ns app.counting
           calcit --entry test --check-only --ns app.test --ns app.program
           calcit fix --workflow strict --verify --format edn
-          calcit calcit.cirru analyze dynamic-methods --max 0
-          calcit calcit.cirru --entry test analyze dynamic-methods --max 0
-          calcit calcit.cirru --entry cli analyze dynamic-methods --max 0
+          calcit analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
+          calcit --entry test analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
+          calcit --entry cli analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
           calcit analyze weak-types --only deprecated-call --format json | jq -e '.data.summary.calls == 0'
           calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
           calcit calcit.cirru --entry test js

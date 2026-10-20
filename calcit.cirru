@@ -5,15 +5,15 @@
   :entries $ {}
     :cli $ {} (:description |) (:init-fn 'app.cli/main!) (:mode :js) (:reload-fn 'app.cli/reload!) (:target :node)
       :feature-policy $ {}
-      :modules $ [] |lilac/ |memof/ |js-ffi/
+      :modules $ [] |js-ffi/
       :type-slots $ {}
     :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
-      :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |js-ffi/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |js-ffi/
       :type-slots $ {}
     :test $ {} (:description |) (:init-fn 'app.test/main!) (:mode :js) (:reload-fn 'app.test/reload!) (:target :node)
       :feature-policy $ {}
-      :modules $ [] |lilac/ |memof/
+      :modules $ []
       :type-slots $ {}
   :files $ {}
     'app.cli $ %{} 'FileEntry
