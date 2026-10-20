@@ -1,14 +1,5 @@
 {} (:schemaVersion 2)
   :definitions $ {}
-    |app.cli/main! $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 0
-      :unsafeCoerce 2
     |app.cli/reload! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -22,38 +13,29 @@
       :codeNil 1
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 1
-    |app.comp.container/comp-md-safe $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
       :unresolved 2
       :unsafeCoerce 0
+    |app.comp.container/comp-md-safe $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
+      :unsafeCoerce 0
     |app.comp.container/comp-runner $ {} (:codeDynamic 0)
-      :codeNil 4
+      :codeNil 2
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
-      :unsafeCoerce 3
-    |app.comp.container/effect-codearea $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 1
+      :unresolved 2
+      :unsafeCoerce 0
     |app.comp.container/jiuzhang-quote $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -81,24 +63,6 @@
       :typeNotFull 0
       :unresolved 1
       :unsafeCoerce 0
-    |app.counting/chinese-pattern $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |app.counting/main! $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
     |app.main/*reel $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -112,35 +76,8 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 2
-      :unsafeCoerce 0
-    |app.main/main! $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
       :schemaDynamic 1
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |app.main/mount-target $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 0
-      :unsafeCoerce 0
-    |app.main/persist-storage! $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
       :typeNotFull 1
       :unresolved 1
       :unsafeCoerce 0
@@ -150,34 +87,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 1
-    |app.main/render-app! $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |app.program/*stdout-logs $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |app.program/*tmp-scope $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 1
       :unsafeCoerce 0
     |app.program/call-add $ {} (:codeDynamic 0)
@@ -260,7 +170,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |app.program/call-fn $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -332,7 +242,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |app.program/call-method $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -368,7 +278,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 1
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |app.program/call-native-hashmap $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -449,7 +359,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |app.program/flat-map-structure? $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -467,24 +377,6 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 2
-    |app.program/global-object $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |app.program/number-pattern $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 1
       :unsafeCoerce 0
     |app.program/read-native-fn $ {} (:codeDynamic 0)
       :codeNil 0
@@ -503,7 +395,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 2
-      :unsafeCoerce 2
+      :unsafeCoerce 0
     |app.program/run-program $ {} (:codeDynamic 0)
       :codeNil 2
       :declaredOptional 0
@@ -512,33 +404,6 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 2
-      :unsafeCoerce 1
-    |app.program/scope-contains? $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |app.program/scope-get $ {} (:codeDynamic 0)
-      :codeNil 1
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 2
-      :unsafeCoerce 0
-    |app.program/simple-str-pattern $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 1
       :unsafeCoerce 0
     |app.schema/store $ {} (:codeDynamic 0)
       :codeNil 0
@@ -548,42 +413,6 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 1
-      :unsafeCoerce 0
-    |app.test/*log-result $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |app.test/__dirname $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |app.test/eval-out $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 0
-      :unsafeCoerce 0
-    |app.test/load-log $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 0
       :unsafeCoerce 0
     |app.test/main! $ {} (:codeDynamic 0)
       :codeNil 0
@@ -604,15 +433,6 @@
       :unresolved 1
       :unsafeCoerce 0
     |app.test/run-tests! $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |app.test/test-data $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
@@ -694,14 +514,14 @@
       :unresolved 5
       :unsafeCoerce 0
   :metrics $ {} (:codeDynamic 0)
-    :codeNil 26
+    :codeNil 23
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 123
-    :typeNone 11
-    :typeNotFull 74
-    :unresolved 149
-    :unsafeCoerce 17
+    :schemaDynamic 106
+    :typeNone 1
+    :typeNotFull 53
+    :unresolved 129
+    :unsafeCoerce 0
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil

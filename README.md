@@ -10,6 +10,46 @@ Previews http://jiuzhang.cirru.org/ .
 
 Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 
+### 本次工具链迁移注意事项
+
+仍是实验原型，不代表重新启动产品维护，也没有发布新的 npm 版本。
+源码使用 `calcit.cirru` 与 `deps.cirru`，不需要 `compact.cirru` 或 `package.cirru`。
+当前 Calcit CLI 与 `@calcit/procs` 配对为 `0.30.1-alpha.5`；正式 `0.30.1`
+原 Publish 按上游说明暂停在上传前，等待 #2080 收尾复核，暂用已完成配对的 alpha.5，
+不把候选版称作正式版。开发环境为 Node 24、Yarn 4.18.0。
+
+```bash
+yarn install --immutable
+calcit --entry test js
+node test.mjs
+calcit --entry cli js
+node cli.mjs tests/fibo.cirru
+calcit js
+yarn vite
+```
+
+三个入口共用默认生成目录 `js-out/`。开发服务器运行时只生成浏览器入口；
+生成 test/cli 后需重新 `calcit js`，避免将 Node 入口产物当作浏览器热更新使用。
+生成文件、依赖目录和 `dist/` 不提交 Git。
+
+CI 按 browser/node 目标分别检查全部项目命名空间，保留质量基线并执行完整 strict 与原有断言。
+解释器仍允许异构值；迁移只在函数形参、数值、字符串、集合和宿主能力边界作真实检查，
+不把任意运行期值伪装成静态同构类型。未启用的旧存储注释和无调用内部辅助定义已清理，
+不新增自动保存或改变九章程序格式。
+三个入口均未引用的 Lilac、Memof 已从模块配置和依赖声明退役，避免加载无关旧 API。
+已逐项审阅并获准迁移 comp-container 的两处 Map 状态边界预算；只有该定义的
+schemaDynamic 0→1、unresolved 1→2，其他定义没有增加预算。
+全局上限进一步收紧为 unsafe=0、schemaDynamic=106、unresolved=129、typeNone=1、
+typeNotFull=53、codeNil=23，低于本轮获准的上限；仍保留原质量门禁。
+解释器值的真实异构边界没有清零，不以强转或伪造静态类型满足数字。
+字符串展示修复了空串/空格/标点被截断的问题，含空白文本使用 Calcit 自身的转义表示；
+不影响原有数值、集合和 Fibonacci 示例的输出。
+
+仅前端 `dist/` 资源迁往 COS/CDN。PR 使用独立预览前缀，main 使用 `Cirru/jiuzhang-lang/`，
+通过 COS action 的 `public-base-url` 启用内置逐文件校验，不另加验证脚本。
+原网页 rsync 路径 `/web-assets/repo/${github.repository}` 保持不变；PR 不执行该部署。
+缺少 COS secrets 时 PR 明确跳过上传，main 则中止部署。
+
 > 昔在庖牺氏始画八卦，以通神明之德，以类万物之情，作九九之术，以合六爻之变。暨于黄帝神而化之，引而伸之，于是建历纪，恊律吕，用稽道原，然后两仪四象精微之气可得而效焉。记称“隶首作数”，其详未之闻也。按周公制礼而有九数，九数之流，则《九章》是矣。
 
 ### Usage
@@ -17,7 +57,7 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 ![npm](https://img.shields.io/npm/v/@cirru/jiuzhang.svg?style=flat-square)
 
 ```bash
-yarn global add @cirru/jiuzhang
+npm install --global @cirru/jiuzhang
 
 jiuzhang demo.cirru
 
