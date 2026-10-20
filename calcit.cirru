@@ -243,7 +243,7 @@
     'app.counting $ %{} 'FileEntry
       :defs $ {}
         'chinese-pattern $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def chinese-pattern (create-regexp |[\u4e00-\u9fa5]+)
+          :code $ quote $ def chinese-pattern (create-regexp |^[\u4e00-\u9fa5]{2}$)
           :examples $ []
           :schema $ :: 'app.program/RegexHost
         'main! $ %{} 'CodeEntry (:doc |)
@@ -1278,9 +1278,13 @@
             is $ = "|\"|文, 文\"" $ format-value "|文, 文"
             is $ = |demo $ format-value :demo
             is $ = |demo $ format-value 'demo
+            is $ = true $ .test chinese-pattern "|甲乙"
+            is $ = false $ .test chinese-pattern "|甲\n"
+            is $ = false $ .test chinese-pattern "|甲乙A"
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
+            :features $ #{} :js-ffi
         'test-fibo $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-fibo () (println "|Testing 菲氏数也")
             is $ = (load-log |fibo.log) (eval-out |fibo.cirru)
@@ -1330,6 +1334,7 @@
             |fs :as fs
             |path :as path
             app.program :refer $ run-program format-value
+            app.counting :refer $ chinese-pattern
     'app.updater $ %{} 'FileEntry
       :defs $ {} $ 'updater
         %{} 'CodeEntry (:doc |)
