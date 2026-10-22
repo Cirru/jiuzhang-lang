@@ -1218,7 +1218,7 @@
             :return $ :: 'List 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.program
-          :require $ |@tiye/nzh/cn.mjs :default nzh
+          :require $ |nzh/cn :default nzh
     'app.schema $ %{} 'FileEntry
       :defs $ {} $ 'store
         %{} 'CodeEntry (:doc |)

@@ -1,6 +1,6 @@
 {
   "name": "@cirru/jiuzhang",
-  "version": "0.0.4-a2",
+  "version": "0.0.5",
   "description": "九章(jiuzhang) dialect",
   "scripts": {
     "watch-page": "calcit calcit.cirru -w",
@@ -10,9 +10,13 @@
     "9c": "./cli.mjs",
     "jiuzhang": "./cli.mjs"
   },
+  "files": [
+    "cli.mjs",
+    "js-out/"
+  ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:tiye/jiuzhang-lang.git"
+    "url": "git@github.com:Cirru/jiuzhang-lang.git"
   },
   "author": "jiyinyiyong",
   "license": "MIT",
@@ -23,12 +27,12 @@
     "vite": "^8.2.2"
   },
   "dependencies": {
-    "@calcit/procs": "0.30.1-alpha.5",
-    "@tiye/nzh": "0.0.1-a2",
+    "@calcit/procs": "0.30.1",
     "chalk": "^5.0.1",
     "cirru-color": "^0.2.4",
     "copy-text-to-clipboard": "^3.2.2",
-    "dayjs": "^1.11.23"
+    "dayjs": "^1.11.23",
+    "nzh": "1.0.14"
   },
   "engines": {
     "node": ">=24"

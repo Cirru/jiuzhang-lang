@@ -14,12 +14,20 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 
 仍是实验原型，不代表重新启动产品维护，也没有发布新的 npm 版本。
 源码使用 `calcit.cirru` 与 `deps.cirru`，不需要 `compact.cirru` 或 `package.cirru`。
-当前 Calcit CLI 与 `@calcit/procs` 配对为 `0.30.1-alpha.5`；正式 `0.30.1`
-原 Publish 按上游说明暂停在上传前，等待 #2080 收尾复核，暂用已完成配对的 alpha.5，
-不把候选版称作正式版。开发环境为 Node 24、Yarn 4.18.0。
+当前 Calcit CLI 与 `@calcit/procs` 配对为正式 `0.30.1`，模块升级后重新安装。
+开发环境为 Node 24、Yarn 4.18.0。项目版本清单统一为源码候选 `0.0.5`，不新增 alpha，
+但本轮未发布 Git tag 或 npm；不能把原 npm 安装结果当作本次源码候选。
+中文数字转换由旧 `@tiye/nzh@0.0.1-a2` 转到正式 `nzh@1.0.14` 的公开 `nzh/cn` 入口，
+直接沿用 encodeS/decodeS，不增加适配层或新的宿主强转。隔离对照的 48 项输入返回类型、值或错误一致，
+不代表穷尽所有中文数字边界；原八组解释器测试、CLI 示例和真实网页仍须验收。
+若外部程序显式加载旧 npm 包名，需要调整到新包的对应公开入口；不额外保留旧 alpha 依赖。
+CLI 的发布文件仅为 `cli.mjs` 与生成的 `js-out/`（以及 npm 自动包含的说明/元数据），
+以 package files 白名单替代旧 `.npmignore`，避免把本地 `.calcit/` 迁移缓存打入包；旧清单可从 Git 恢复。
 
 ```bash
+caps --strict --ci
 yarn install --immutable
+caps verify --toolchain
 calcit --entry test js
 node test.mjs
 calcit --entry cli js

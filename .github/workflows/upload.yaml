@@ -46,7 +46,9 @@ jobs:
           calcit --check-only --ns 'app.$meta' --ns app.config --ns app.schema --ns app.updater --ns app.comp.container --ns app.main
           calcit --entry cli --check-only --ns app.cli --ns app.program --ns app.counting
           calcit --entry test --check-only --ns app.test --ns app.program
-          calcit fix --workflow strict --verify --format edn
+          calcit fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
+          calcit --entry cli fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
+          calcit --entry test fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
           calcit analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
           calcit --entry test analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
           calcit --entry cli analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
@@ -56,6 +58,7 @@ jobs:
           node test.mjs
           calcit calcit.cirru --entry cli js
           node cli.mjs tests/fibo.cirru
+          npm pack --dry-run --ignore-scripts --json | jq -e '.[0].files | any(.path == "cli.mjs") and any(.path == "js-out/app.cli.mjs") and all(.path | startswith(".calcit/") | not)'
           calcit calcit.cirru js
 
       - name: Select frontend CDN path
