@@ -27,19 +27,27 @@ jobs:
       - name: Enable Corepack
         run: |
           corepack enable
-          corepack prepare yarn@4.12.0 --activate
+          corepack prepare yarn@4.18.0 --activate
 
-      - uses: calcit-lang/setup-calcit@704b3f5cd6f9ce3bd1e0c926dbdd1d181adb8180 # v1.4.0
+      - uses: calcit-lang/setup-calcit@ca701be5a471759e442aa053cd100720bbe1f09f # v1.5.0
+        with:
+          deps-file: deps.cirru
+          tools: calcit,caps
+          caps-version: "0.1.1"
 
       - name: Validate and build CLI
         run: |
+          set -euo pipefail
           yarn install --immutable
           caps --strict --ci
           caps verify --toolchain
           calcit calcit.cirru --entry test --check-only
           calcit calcit.cirru --entry cli --check-only
-          calcit calcit.cirru --entry test analyze dynamic-methods --max 0
-          calcit calcit.cirru --entry cli analyze dynamic-methods --max 0
+          calcit --entry test analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
+          calcit --entry cli analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
+          calcit fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
+          calcit --entry cli fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
+          calcit --entry test fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
           calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
           calcit calcit.cirru --entry test js
           node test.mjs
