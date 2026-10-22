@@ -21,6 +21,8 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 直接沿用 encodeS/decodeS，不增加适配层或新的宿主强转。隔离对照的 48 项输入返回类型、值或错误一致，
 不代表穷尽所有中文数字边界；原八组解释器测试、CLI 示例和真实网页仍须验收。
 若外部程序显式加载旧 npm 包名，需要调整到新包的对应公开入口；不额外保留旧 alpha 依赖。
+CLI 的发布文件仅为 `cli.mjs` 与生成的 `js-out/`（以及 npm 自动包含的说明/元数据），
+以 package files 白名单替代旧 `.npmignore`，避免把本地 `.calcit/` 迁移缓存打入包；旧清单可从 Git 恢复。
 
 ```bash
 caps --strict --ci

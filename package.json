@@ -10,6 +10,10 @@
     "9c": "./cli.mjs",
     "jiuzhang": "./cli.mjs"
   },
+  "files": [
+    "cli.mjs",
+    "js-out/"
+  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:Cirru/jiuzhang-lang.git"

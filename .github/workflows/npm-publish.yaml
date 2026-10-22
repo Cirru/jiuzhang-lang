@@ -52,6 +52,7 @@ jobs:
           calcit calcit.cirru --entry test js
           node test.mjs
           calcit calcit.cirru --entry cli js
+          npm pack --dry-run --ignore-scripts --json | jq -e '.[0].files | any(.path == "cli.mjs") and any(.path == "js-out/app.cli.mjs") and all(.path | startswith(".calcit/") | not)'
 
       - name: publish
         run: npm publish
