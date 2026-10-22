@@ -23,7 +23,9 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 若外部程序显式加载旧 npm 包名，需要调整到新包的对应公开入口；不额外保留旧 alpha 依赖。
 
 ```bash
+caps --strict --ci
 yarn install --immutable
+caps verify --toolchain
 calcit --entry test js
 node test.mjs
 calcit --entry cli js
