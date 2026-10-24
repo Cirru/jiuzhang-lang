@@ -47,9 +47,18 @@ CI 按 browser/node 目标分别检查全部项目命名空间，保留质量基
 三个入口均未引用的 Lilac、Memof 已从模块配置和依赖声明退役，避免加载无关旧 API。
 已逐项审阅并获准迁移 comp-container 的两处 Map 状态边界预算；只有该定义的
 schemaDynamic 0→1、unresolved 1→2，其他定义没有增加预算。
-全局上限进一步收紧为 unsafe=0、schemaDynamic=106、unresolved=129、typeNone=1、
-typeNotFull=53、codeNil=23，低于本轮获准的上限；仍保留原质量门禁。
+全局上限进一步收紧为 unsafe=0、schemaDynamic=104、unresolved=127、typeNone=0、
+typeNotFull=52、codeNil=23，低于本轮获准的上限；仍保留原质量门禁。
 解释器值的真实异构边界没有清零，不以强转或伪造静态类型满足数字。
+后续写法维护将受审 List 计数/左折叠与 Map 合并改用 `.len`、`.foldl`、`.merge`，
+并删除四处只有一个 Map 参数的无效 `merge` 包装；不改变九章语法、数值计算、
+参数个数检查、原算术 reducer、错误文本或 UI 合并覆盖顺序。
+`count` 仍是合法通用 API，不能据此机械迁移任意异构值或退役兼容入口。
+原八组断言、三入口完整 strict、逐定义/全局预算与真实页面 `hud!` 保留，
+不新增检查脚本、强转或放宽质量门禁；本轮不发版、不部署。
+配置的 `dev?` 明确为 Bool，`site` 明确为 Map<Tag,String>，均由原实现的独立类型证据确认；
+只下调这两个定义及对应全局预算，其他定义不放宽。后续误写非 String 配置会更早在门禁拒绝，
+当前配置值与运行行为不变，解释器的真实异构值合同不收窄。
 字符串展示修复了空串/空格/标点被截断的问题，含空白文本使用 Calcit 自身的转义表示；
 不影响原有数值、集合和 Fibonacci 示例的输出。
 
