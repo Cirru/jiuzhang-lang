@@ -6,7 +6,7 @@ function norm(v){if(Array.isArray(v))return v.map(norm);if(v&&typeof v==='object
 const q=(...a)=>norm(JSON.parse(run('query',...a,'--format','json')).data);
 const blob=p=>execFileSync('git',['hash-object',p],{encoding:'utf8'}).trim();
 mkdirSync('acceptance',{recursive:true});assert.equal(run('-v').trim(),'0.30.1');writeFileSync('acceptance/agent-contract.txt',run('docs','agents','--contract'));
-assert.equal(blob('calcit.cirru'),'8a5dcd76eba979dbd38da56d01b8c769c997588c');assert.equal(blob('config/calcit-quality.cirru'),'d6f8dba1c7a08c701753905e9264e44a358e335b');
+assert.equal(blob('calcit.cirru'),'8a5dcd76eba979dbd38da56d01b8c769c997588c');assert.equal(blob('config/calcit-quality.cirru'),'0832e2f33de0fdab82d4d9994bfd3f1b52646455');
 const before=norm(JSON.parse(readFileSync('reviewed.json','utf8'))),expected=structuredClone(before),types=JSON.parse(readFileSync('reviewed-types.json','utf8'));
 assert.equal(before.length,77);assert.equal(types.length,35);
 const config=q('config'),namespaces=q('ns').namespaces.map(ns=>q('ns',ns));
@@ -40,8 +40,16 @@ function walk(x,path,id){
 }
 for(const d of expected){assert.deepEqual(q('def',d.id),before.find(t=>t.id===d.id));d.code=walk(d.code,[],d.id);}
 assert.deepEqual(counts,{merge:9,count:22,foldl:4});assert.equal(ops.length,35);assert.equal(proven,26);assert.equal(manual,9);assert.equal(removed,4);
+const configTypes=[];
+for(const [id,schema,inferred] of [['app.config/dev?',"'Bool","'Bool"],['app.config/site',['::',"'Map","'Tag","'String"],":: 'Map 'Tag 'String"]]){
+  const view=JSON.parse(run('query','type-at',id,'--path','@2','--format','json'));
+  assert.equal(view.data.inferred_type,inferred);assert.equal(view.data.confidence,'exact');assert.deepEqual(view.diagnostics,[]);configTypes.push(view);
+  const d=expected.find(d=>d.id===id);assert.equal(d.schema,null);d.schema=structuredClone(schema);
+  ops.push(['edit','schema',id,'--input-format','json-ast','--code',JSON.stringify(schema)]);
+}
+assert.equal(ops.length,37);writeFileSync('acceptance/config-type-evidence.json',JSON.stringify(configTypes,null,2));
 writeFileSync('acceptance/operations.json',JSON.stringify(ops,null,2));const args=['edit','transaction','--file','acceptance/operations.json','--format','json'];
 const preview=JSON.parse(run(...args,'--dry-run'));assert.ok(preview.scoped_revision);writeFileSync('acceptance/transaction-preview.json',JSON.stringify(preview,null,2));writeFileSync('acceptance/transaction-applied.json',run(...args,'--expect-revision',preview.scoped_revision));
 const actual=[];for(const ns of namespaces){const names=run('query','defs',ns.namespace).split('\n').filter(x=>/^  \S/.test(x)).map(x=>x.trim().split(' ')[0]);assert.equal(names.length,ns.definition_count);for(const n of names)actual.push(q('def',`${ns.namespace}/${n}`));}
-assert.deepEqual(actual,expected);assert.deepEqual(q('config'),config);assert.deepEqual(q('ns').namespaces.map(ns=>q('ns',ns)),namespaces);assert.equal(blob('config/calcit-quality.cirru'),'d6f8dba1c7a08c701753905e9264e44a358e335b');
-writeFileSync('acceptance/after.json',JSON.stringify(actual,null,2));writeFileSync('acceptance/summary.json',JSON.stringify({definitions:77,operations:35,counts,proven,manual,removedIdentityMerges:removed,preserved:'all definitionmetadata/schema/tests/examples/ns/config/baseline/FFI/HUD/storage/operands/evaluation/reducers/defaults/errors'},null,2));writeFileSync('acceptance/snapshot-after-blob.txt',blob('calcit.cirru'));
+assert.deepEqual(actual,expected);assert.deepEqual(q('config'),config);assert.deepEqual(q('ns').namespaces.map(ns=>q('ns',ns)),namespaces);assert.equal(blob('config/calcit-quality.cirru'),'0832e2f33de0fdab82d4d9994bfd3f1b52646455');
+writeFileSync('acceptance/after.json',JSON.stringify(actual,null,2));writeFileSync('acceptance/summary.json',JSON.stringify({definitions:77,operations:37,counts,proven,manual,removedIdentityMerges:removed,configSchemas:['app.config/dev?','app.config/site'],preserved:'all other definitionmetadata/schema/tests/examples/ns/projectconfig/FFI/HUD/storage/operands/evaluation/reducers/defaults/errors;baselineonlytightensreviewed2configsandglobaltotals'},null,2));writeFileSync('acceptance/snapshot-after-blob.txt',blob('calcit.cirru'));

@@ -47,7 +47,7 @@ jobs:
           calcit --entry test analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
           calcit --entry cli analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
           calcit analyze weak-types --only deprecated-call --format json | jq -e '.data.summary.calls == 0'
-          calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
+          calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru | tee acceptance/quality.txt
           calcit calcit.cirru --entry test js
           node test.mjs
           calcit calcit.cirru --entry cli js
