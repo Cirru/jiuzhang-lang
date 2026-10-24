@@ -56,14 +56,13 @@
                   get store :states
                   , .unwrap-or $ {}
               div
-                {} $ :style $ merge ui/global ui/fullscreen
+                {} $ :style $ .merge ui/global ui/fullscreen
                 div
                   {} $ :style $ {} (:padding 80)
                     :background-color $ hsl 200 80 70
                     :color :white
                   div
-                    {} $ :style $ merge
-                      {} (:margin :auto) (:max-width 960)
+                    {} $ :style $ {} (:margin :auto) (:max-width 960)
                     div ({})
                       <> "|九章编程" $ {} (:font-size 40) (:font-family ui/font-fancy)
                       =< 8 nil
@@ -73,8 +72,7 @@
                       <> jiuzhang-quote
                       <> "|(This is toy project.)"
                 div
-                  {} $ :style $ merge
-                    {} (:margin :auto) (:max-width 960) (:padding "|40px 0")
+                  {} $ :style $ {} (:margin :auto) (:max-width 960) (:padding "|40px 0")
                   comp-runner (>> states :variables) "|名也" $ inline |tests/variables.cirru
                   comp-runner (>> states :data) "|列置者" $ inline |tests/data.cirru
                   comp-runner (>> states :fn) "|术曰" $ inline |tests/fn.cirru
@@ -88,8 +86,7 @@
                     :background-color $ hsl 200 80 70
                     :color :white
                   div
-                    {} $ :style $ merge
-                      {} (:margin :auto) (:max-width 960)
+                    {} $ :style $ {} (:margin :auto) (:max-width 960)
                     div
                       {} $ :style $ {}
                       comp-md-safe "|Find source code and get CLI usages on [GitHub](https://github.com/Cirru/jiuzhang-lang)."
@@ -137,9 +134,9 @@
                     <> $ or title |Example
                   =< nil 8
                   div
-                    {} $ :style $ merge ui/row
+                    {} $ :style ui/row
                     textarea $ {} (:value code) (:class-name |source-code) (:placeholder |Content)
-                      :style $ merge ui/expand ui/textarea $ {} (:font-family ui/font-code) (:min-height 320)
+                      :style $ .merge ui/expand ui/textarea $ {} (:font-family ui/font-code) (:min-height 320)
                         :border $ str "|1px solid " $ hsl 0 0 93
                         :background-color :white
                       :on-input $ fn (e d!)
@@ -156,16 +153,16 @@
                           :on-click $ fn (e d!)
                             try
                               let[] (ret out) (run-program code) (println |Result: ret)
-                                d! cursor $ merge state $ {}
+                                d! cursor $ .merge state $ {}
                                   :result $ decode-map-as out 'String
                                   :error |
                               fn (err)
-                                d! cursor $ merge state $ {} (:result |)
+                                d! cursor $ .merge state $ {} (:result |)
                                   :error $ str err
                         if (not= code code0)
                           a $ {} (:inner-text "|重置") (:style ui/link)
                             :on-click $ fn (e d!)
-                              d! cursor $ merge state $ {} (:code code0) (:result |) (:error |)
+                              d! cursor $ .merge state $ {} (:code code0) (:result |) (:error |)
                       if-not (blank? error)
                         pre $ {}
                           :style $ {} (:background-color :transparent) (:color :red)
@@ -232,12 +229,12 @@
               get-env |mode
               , .unwrap-or |release
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
             {} (:dev-ui |http://localhost:8100/main-fonts.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main-fonts.css) (:title "|九章编程") (:icon |http://cdn.tiye.me/logo/cirru.png) (:storage-key |jiuzhang)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
     'app.counting $ %{} 'FileEntry
@@ -261,12 +258,12 @@
                 rows $ sort (map-entries groups)
                   fn (a b)
                     -
-                      count $ :value b
-                      count $ :value a
+                      .len $ :value b
+                      .len $ :value a
               println $ join-string
                 map (take rows 100)
                   fn (entry)
-                    str (:key entry) "| " $ count $ :value entry
+                    str (:key entry) "| " $ .len $ :value entry
                 , &newline
             , &unit
           :examples $ []
@@ -386,7 +383,7 @@
                 []
                   let
                       operands params
-                    if (empty? operands) 0 $ foldl (rest operands)
+                    if (empty? operands) 0 $ .foldl (rest operands)
                       (first operands) .unwrap
                       , &+
                   , new-scope
@@ -445,7 +442,7 @@
                         :rest 'Dynamic
                         :return $ :: 'List 'Dynamic
                       when-not
-                        = (count ys) (count f-params)
+                        = (.len ys) (.len f-params)
                         raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
                       let
                           scope $ loop
@@ -485,7 +482,7 @@
               cond
                   empty? body
                   [] 1 scope
-                (= 1 (count body))
+                (= 1 (.len body))
                   let[] (v new-scope)
                     call-expression
                         first body
@@ -503,7 +500,7 @@
                           , .unwrap
                         delta $ let
                             operands $ rest params
-                          if (empty? operands) 0 $ foldl (rest operands)
+                          if (empty? operands) 0 $ .foldl (rest operands)
                             (first operands) .unwrap
                             , &+
                       [] (&/ x0 delta) new-scope
@@ -535,7 +532,7 @@
           :code $ quote $ defn call-equal (raw-xs scope stdout)
             let
                 xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
-              assert "|\"直\"需二参数" $ = 2 $ count xs
+              assert "|\"直\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
                   = (get params 0) (get params 1)
@@ -615,7 +612,7 @@
           :code $ quote $ defn call-filter (raw-xs scope stdout)
             let
                 xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
-              assert "|\"其\"需二参数" $ = 2 $ count xs
+              assert "|\"其\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 let
                     items $
@@ -667,7 +664,7 @@
                       :rest 'Dynamic
                       :return $ :: 'List 'Dynamic
                     when-not
-                      = (count ys) (count f-params)
+                      = (.len ys) (.len f-params)
                       raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
                     let
                         scope $ loop
@@ -703,7 +700,7 @@
           :code $ quote $ defn call-get (raw-xs scope stdout)
             let
                 xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
-              assert "|\"取\"需二参数" $ = 2 $ count xs
+              assert "|\"取\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 let
                     target $
@@ -728,8 +725,8 @@
                 -> xs
                   map $ fn (pair)
                     when-not
-                      = 2 $ count pair
-                      raise $ str "|Invalid length" (count pair) |of $ to-lispy-string pair
+                      = 2 $ .len pair
+                      raise $ str "|Invalid length" (.len pair) |of $ to-lispy-string pair
                     -> pair $ map $ fn (x)
                       (first (call-expression x scope stdout))
                         , .unwrap
@@ -759,7 +756,7 @@
           :code $ quote $ defn call-if (raw-body scope stdout)
             let
                 body $ decode-map-as raw-body $ :: 'List 'Dynamic
-              assert "|\"若\"需传入\"条件\"及\"结果\"" $ >= (count body) 2
+              assert "|\"若\"需传入\"条件\"及\"结果\"" $ >= (.len body) 2
               let
                   condition $
                     get body 0
@@ -768,7 +765,7 @@
                     get body 1
                     , .unwrap
                   else-part $ if
-                    >= (count body) 3
+                    >= (.len body) 3
                     (get body 2) .unwrap
                     , nil
                 if
@@ -784,7 +781,7 @@
           :code $ quote $ defn call-larger (raw-xs scope stdout)
             let
                 xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
-              assert "|\"多于\"需二参数" $ = 2 $ count xs
+              assert "|\"多于\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
                   >
@@ -805,7 +802,7 @@
           :code $ quote $ defn call-littler (raw-xs scope stdout)
             let
                 xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
-              assert "|\"少于\"需二参数" $ = 2 $ count xs
+              assert "|\"少于\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
                   <
@@ -826,7 +823,7 @@
           :code $ quote $ defn call-map (raw-xs scope stdout)
             let
                 xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
-              assert "|\"各\"需二参数" $ = 2 $ count xs
+              assert "|\"各\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 let
                     items $
@@ -892,7 +889,7 @@
               cond
                   empty? body
                   [] 0 scope
-                (= 1 (count body))
+                (= 1 (.len body))
                   let[] (ret new-scope)
                     call-expression
                         first body
@@ -910,7 +907,7 @@
                           , .unwrap
                         delta $ let
                             operands $ rest params
-                          if (empty? operands) 0 $ foldl (rest operands)
+                          if (empty? operands) 0 $ .foldl (rest operands)
                             (first operands) .unwrap
                             , &+
                       [] (- x0 delta) new-scope
@@ -926,7 +923,7 @@
                 []
                   let
                       operands params
-                    if (empty? operands) 1 $ foldl (rest operands)
+                    if (empty? operands) 1 $ .foldl (rest operands)
                       (first operands) .unwrap
                       , &*
                   , new-scope
@@ -960,7 +957,7 @@
                 body $ decode-map-as raw-body $ :: 'List 'Dynamic
               if
                 and
-                  = 0 $ &number:rem (count body) 2
+                  = 0 $ &number:rem (.len body) 2
                   flat-map-structure? body
                 []
                   let[] (params new-scope) (extract-params body scope stdout)
@@ -1016,7 +1013,7 @@
           :code $ quote $ defn call-require (raw-xs scope stdout)
             let
                 xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
-              assert "|\"引\"需一参数" $ = 1 $ count xs
+              assert "|\"引\"需一参数" $ = 1 $ .len xs
               []
                 .?!require js/globalThis $
                   first xs
@@ -1079,7 +1076,7 @@
             let
                 xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
               let
-                  size $ count xs
+                  size $ .len xs
                 if
                   = 0 $ &number:rem size 2
                   let

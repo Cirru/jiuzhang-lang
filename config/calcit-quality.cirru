@@ -49,19 +49,19 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 1
-      :typeNotFull 1
-      :unresolved 1
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |app.config/site $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 0
-      :unresolved 1
+      :unresolved 0
       :unsafeCoerce 0
     |app.main/*reel $ {} (:codeDynamic 0)
       :codeNil 0
@@ -517,10 +517,10 @@
     :codeNil 23
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 106
-    :typeNone 1
-    :typeNotFull 53
-    :unresolved 129
+    :schemaDynamic 104
+    :typeNone 0
+    :typeNotFull 52
+    :unresolved 127
     :unsafeCoerce 0
   :scope $ {} (:includeDependencies false)
     :namespace nil
