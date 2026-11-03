@@ -10,19 +10,26 @@ Previews http://jiuzhang.cirru.org/ .
 
 Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 
-### 本次工具链迁移注意事项
+### 使用者影响
 
-仍是实验原型，不代表重新启动产品维护，也没有发布新的 npm 版本。
-源码使用 `calcit.cirru` 与 `deps.cirru`，不需要 `compact.cirru` 或 `package.cirru`。
-当前 Calcit CLI 与 `@calcit/procs` 配对为正式 `0.30.1`，模块升级后重新安装。
-开发环境为 Node 24、Yarn 4.18.0。项目版本清单统一为源码候选 `0.0.5`，不新增 alpha，
-但本轮未发布 Git tag 或 npm；不能把原 npm 安装结果当作本次源码候选。
-中文数字转换由旧 `@tiye/nzh@0.0.1-a2` 转到正式 `nzh@1.0.14` 的公开 `nzh/cn` 入口，
-直接沿用 encodeS/decodeS，不增加适配层或新的宿主强转。隔离对照的 48 项输入返回类型、值或错误一致，
-不代表穷尽所有中文数字边界；原八组解释器测试、CLI 示例和真实网页仍须验收。
-若外部程序显式加载旧 npm 包名，需要调整到新包的对应公开入口；不额外保留旧 alpha 依赖。
-CLI 的发布文件仅为 `cli.mjs` 与生成的 `js-out/`（以及 npm 自动包含的说明/元数据），
-以 package files 白名单替代旧 `.npmignore`，避免把本地 `.calcit/` 迁移缓存打入包；旧清单可从 Git 恢复。
+仍是实验原型，不代表重新启动产品维护。本地迁移候选使用官方 Calcit CLI / `@calcit/procs`
+**0.34.2**，Node 24、Yarn 4.18.0。只使用 `calcit.cirru` / `deps.cirru`，不恢复旧快照。
+模块版本暂指向尚未发布的 Markdown **0.6.0** 候选；当前采用显式本地模块链接进行预检，
+不能把它称为正式 tag 安装验收。该依赖正式发版后才准备最终迁移 PR。
+
+31 处解释器输出回调由 Dynamic 明确为 `Fn & String (-> Unit)`，宿主属性路径明确为
+`List String`，固定文案明确为 String；没有将任意解释器值和 JS 宿主返回值伪装成闭合 union。
+入口根据已有 updater 五种操作声明名义 Op，绑定 Respo 的 dispatch-op 类型槽；异构状态
+和内容载荷保持原开放边界。可选开发面板、重置按钮、错误区域显式使用 Option，显示条件保持。
+原字符串标题的恒真 fallback 已移除，空字符串仍按原规则显示为空。
+
+官方 CLI 规范化旧类型标注。原八组解释器断言、CLI 示例、HUD、旧运行期数据和 Map/可选
+合同保留，不新增验证脚本，不放宽质量基线。当前原八组 Node 测试、CLI Fibonacci 示例与
+构建已通过；完整 strict 覆盖 browser / CLI / test 三入口且 diagnostics 为空。原质量基线
+逐字节保持，schemaDynamic 104→83、unresolved 127→106、unsafe=0；不将这些结果宣称为
+新的浏览器或存档验收。
+整合已有 Dependabot #23 / #28 锁文件补丁，不更改其协作状态。本候选不合并、不部署、
+不发布 tag/npm。历史 npm 包不代表此源码候选。
 
 ```bash
 caps --strict --ci
