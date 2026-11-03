@@ -59,7 +59,9 @@ yarn vite
 原质量上限保持 unsafe=0、schemaDynamic=104、unresolved=127、typeNone=0、
 typeNotFull=52、codeNil=23。历史获准的 Map 状态边界预算没有再次放宽；本轮实际值
 schemaDynamic=83、unresolved=106，其他指标不增加。HUD 与未启用自动保存的行为保持，
-不增加真实数据、存档或剪贴板验收操作。原八组断言和三个入口的全部门禁保持。
+不增加真实数据、存档或剪贴板验收操作。原八组断言和三个入口的全部门禁保持。Calcit 0.34.2 的单次 strict workflow 已检查
+全部三个入口，因此 CI 保留一次完整 workflow，去掉两次重复执行；各入口的公开定义和
+dynamic-method 检查仍分别保留。
 
 仅前端 `dist/` 资源迁往 COS/CDN。PR 使用独立预览前缀，main 使用 `Cirru/jiuzhang-lang/`，
 通过 COS action 的 `public-base-url` 启用内置逐文件校验，不另加验证脚本。
