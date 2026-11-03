@@ -10,19 +10,28 @@ Previews http://jiuzhang.cirru.org/ .
 
 Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 
-### 本次工具链迁移注意事项
+### 使用者影响
 
-仍是实验原型，不代表重新启动产品维护，也没有发布新的 npm 版本。
-源码使用 `calcit.cirru` 与 `deps.cirru`，不需要 `compact.cirru` 或 `package.cirru`。
-当前 Calcit CLI 与 `@calcit/procs` 配对为正式 `0.30.1`，模块升级后重新安装。
-开发环境为 Node 24、Yarn 4.18.0。项目版本清单统一为源码候选 `0.0.5`，不新增 alpha，
-但本轮未发布 Git tag 或 npm；不能把原 npm 安装结果当作本次源码候选。
-中文数字转换由旧 `@tiye/nzh@0.0.1-a2` 转到正式 `nzh@1.0.14` 的公开 `nzh/cn` 入口，
-直接沿用 encodeS/decodeS，不增加适配层或新的宿主强转。隔离对照的 48 项输入返回类型、值或错误一致，
-不代表穷尽所有中文数字边界；原八组解释器测试、CLI 示例和真实网页仍须验收。
-若外部程序显式加载旧 npm 包名，需要调整到新包的对应公开入口；不额外保留旧 alpha 依赖。
-CLI 的发布文件仅为 `cli.mjs` 与生成的 `js-out/`（以及 npm 自动包含的说明/元数据），
-以 package files 白名单替代旧 `.npmignore`，避免把本地 `.calcit/` 迁移缓存打入包；旧清单可从 Git 恢复。
+仍是实验原型，不代表重新启动产品维护。本地迁移候选使用官方 Calcit CLI / `@calcit/procs`
+**0.34.2**，Node 24、Yarn 4.18.0。只使用 `calcit.cirru` / `deps.cirru`，不恢复旧快照。
+模块使用已发布正式 tag：Reel **0.8.1**、Markdown **0.6.0**、UI **0.12.1**、
+Respo **0.18.1**、JS-FFI **0.2.9**，传递的 Router 版本为 **0.10.1**。Caps strict/toolchain
+及 immutable 安装已通过，不再依赖本地候选链接。该图保留 Map 事件兼容合同，不与 Respo
+0.19 新事件图混装。
+
+31 处解释器输出回调由 Dynamic 明确为 `Fn String (-> Unit)`，宿主属性路径明确为
+`List String`，固定文案明确为 String；没有将任意解释器值和 JS 宿主返回值伪装成闭合 union。
+入口根据已有 updater 五种操作声明名义 Op，绑定 Respo 的 dispatch-op 类型槽；异构状态
+和内容载荷保持原开放边界。可选开发面板、重置按钮、错误区域显式使用 Option，显示条件保持。
+原字符串标题的恒真 fallback 已移除，空字符串仍按原规则显示为空。
+
+官方 CLI 规范化旧类型标注。原八组解释器断言、CLI 示例、HUD、旧运行期数据和 Map/可选
+合同保留，不新增验证脚本，不放宽质量基线。当前原八组 Node 测试、CLI Fibonacci 示例与
+构建已通过；完整 strict 覆盖 browser / CLI / test 三入口且 diagnostics 为空。原质量基线
+逐字节保持，schemaDynamic 104→83、unresolved 127→106、unsafe=0；不将这些结果宣称为
+新的浏览器或存档验收。
+整合已有 Dependabot #23 / #28 锁文件补丁，不更改其协作状态。本候选不合并、不部署、
+不发布 tag/npm。历史 npm 包不代表此源码候选。
 
 ```bash
 caps --strict --ci
@@ -40,27 +49,19 @@ yarn vite
 生成 test/cli 后需重新 `calcit js`，避免将 Node 入口产物当作浏览器热更新使用。
 生成文件、依赖目录和 `dist/` 不提交 Git。
 
-CI 按 browser/node 目标分别检查全部项目命名空间，保留质量基线并执行完整 strict 与原有断言。
-解释器仍允许异构值；迁移只在函数形参、数值、字符串、集合和宿主能力边界作真实检查，
-不把任意运行期值伪装成静态同构类型。未启用的旧存储注释和无调用内部辅助定义已清理，
-不新增自动保存或改变九章程序格式。
-三个入口均未引用的 Lilac、Memof 已从模块配置和依赖声明退役，避免加载无关旧 API。
-已逐项审阅并获准迁移 comp-container 的两处 Map 状态边界预算；只有该定义的
-schemaDynamic 0→1、unresolved 1→2，其他定义没有增加预算。
-全局上限进一步收紧为 unsafe=0、schemaDynamic=104、unresolved=127、typeNone=0、
-typeNotFull=52、codeNil=23，低于本轮获准的上限；仍保留原质量门禁。
-解释器值的真实异构边界没有清零，不以强转或伪造静态类型满足数字。
-后续写法维护将受审 List 计数/左折叠与 Map 合并改用 `.len`、`.foldl`、`.merge`，
-并删除四处只有一个 Map 参数的无效 `merge` 包装；不改变九章语法、数值计算、
-参数个数检查、原算术 reducer、错误文本或 UI 合并覆盖顺序。
-`count` 仍是合法通用 API，不能据此机械迁移任意异构值或退役兼容入口。
-原八组断言、三入口完整 strict、逐定义/全局预算与真实页面 `hud!` 保留，
-不新增检查脚本、强转或放宽质量门禁；本轮不发版、不部署。
-配置的 `dev?` 明确为 Bool，`site` 明确为 Map<Tag,String>，均由原实现的独立类型证据确认；
-只下调这两个定义及对应全局预算，其他定义不放宽。后续误写非 String 配置会更早在门禁拒绝，
-当前配置值与运行行为不变，解释器的真实异构值合同不收窄。
-字符串展示修复了空串/空格/标点被截断的问题，含空白文本使用 Calcit 自身的转义表示；
-不影响原有数值、集合和 Fibonacci 示例的输出。
+### 保留的合同与历史迁移
+
+此前已从旧中文数字包切到正式 `nzh@1.0.14` 的公开 `nzh/cn` 入口，保留原 encodeS/decodeS；
+未引用的 Lilac/Memof 已退役，原字符串展示和受审 List 计数/折叠/Map 合并迁移保留。
+`count` 仍是合法通用 API，不据此机械改写任意异构值。本次只迁移真实可明确的关系，
+解释器值仍允许异构，JS 宿主返回值保持开放；不新建编译器 fix/proof 规则。
+
+原质量上限保持 unsafe=0、schemaDynamic=104、unresolved=127、typeNone=0、
+typeNotFull=52、codeNil=23。历史获准的 Map 状态边界预算没有再次放宽；本轮实际值
+schemaDynamic=83、unresolved=106，其他指标不增加。HUD 与未启用自动保存的行为保持，
+不增加真实数据、存档或剪贴板验收操作。原八组断言和三个入口的全部门禁保持。Calcit 0.34.2 的单次 strict workflow 已检查
+全部三个入口，因此 CI 保留一次完整 workflow，去掉两次重复执行；各入口的公开定义和
+dynamic-method 检查仍分别保留。
 
 仅前端 `dist/` 资源迁往 COS/CDN。PR 使用独立预览前缀，main 使用 `Cirru/jiuzhang-lang/`，
 通过 COS action 的 `public-base-url` 启用内置逐文件校验，不另加验证脚本。

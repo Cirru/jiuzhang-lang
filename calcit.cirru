@@ -10,7 +10,7 @@
     :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |js-ffi/
-      :type-slots $ {}
+      :type-slots $ {} $ :dispatch-op |app.schema/Op
     :test $ {} (:description |) (:init-fn 'app.test/main!) (:mode :js) (:reload-fn 'app.test/reload!) (:target :node)
       :feature-policy $ {}
       :modules $ []
@@ -31,13 +31,11 @@
                 do (println "|No file name") (exit! 1)
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! () (println |TODO)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.cli
           :require
@@ -51,7 +49,7 @@
                 store $ decode-map-as
                     get reel :store
                     , .unwrap-or $ {}
-                  :: 'Map 'Tag 'Dynamic
+                  quote $ Map Tag Dynamic
                 states $
                   get store :states
                   , .unwrap-or $ {}
@@ -93,16 +91,16 @@
                     div
                       {} $ :style $ {}
                       comp-md-safe "|Based on toolchains from [Cirru Project](https://github.com/Cirru/)."
-                when dev? $ comp-reel (>> states :reel) reel $ {}
+                if dev?
+                  %:: Option :some $ comp-reel (>> states :reel) reel $ {}
+                  %:: Option :none
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> respo.schema/Component)
         'comp-md-safe $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-md-safe (text)
             comp-md (decode-map-as text 'String) ({})
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
         'comp-runner $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-runner (states title code0)
             let
@@ -112,7 +110,7 @@
                 state $ decode-map-as
                     get states :data
                     , .unwrap-or $ {} (:code code0) (:result "|按 \"点击按钮运行\"") (:error |)
-                  :: 'Map 'Tag 'Dynamic
+                  quote $ Map Tag Dynamic
                 code $ decode-map-as
                     get state :code
                     , .unwrap-or code0
@@ -130,8 +128,7 @@
                   {} $ :style $ {} (:margin "|80px 0")
                     :background-color $ hsl 0 0 98
                     :padding |16px
-                  div ({})
-                    <> $ or title |Example
+                  div ({}) (<> title)
                   =< nil 8
                   div
                     {} $ :style ui/row
@@ -160,38 +157,35 @@
                                 d! cursor $ .merge state $ {} (:result |)
                                   :error $ str err
                         if (not= code code0)
-                          a $ {} (:inner-text "|重置") (:style ui/link)
+                          %:: Option :some $ a $ {} (:inner-text "|重置") (:style ui/link)
                             :on-click $ fn (e d!)
                               d! cursor $ .merge state $ {} (:code code0) (:result |) (:error |)
-                      if-not (blank? error)
-                        pre $ {}
+                          %:: Option :none
+                      if (blank? error) (%:: Option :none)
+                        %:: Option :some $ pre $ {}
                           :style $ {} (:background-color :transparent) (:color :red)
                           :inner-text error
                       pre $ {}
                         :style $ {} $ :background-color :transparent
                         :inner-text result
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic 'String 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic String String (-> respo.schema/Component) (:features :js-ffi)
         'effect-codearea $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-codearea () (action el)
             update-codearea! (decode-map-as action 'Tag) (element-host el)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ []
+          :schema $ quote $ Fn (-> respo.schema/Effect)
         'inline $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defmacro inline (path)
             read-file $ str path
           :examples $ []
-          :schema $ :: 'Macro $ {}
-            :capabilities $ #{} :fs-read
-            :expansion $ :: 'Expr 'String
-            :required $ [] $ :: 'Expr 'String
+          :schema $ quote $ Macro (Expr String)
+            -> $ Expr String
+            :capabilities :fs-read
         'jiuzhang-quote $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def jiuzhang-quote "|昔在包犧氏始畫八卦，以通神明之德，以類萬物之情，作九九之術以合六爻之變。暨於黃帝神而化之，引而伸之，於是建曆紀，協律呂，用稽道原，然後兩儀四象精微之氣可得而效焉。記稱隸首作數，其詳未之聞也。按周公制禮而有九數，九數之流，則九章是矣。"
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ quote String
         'update-codearea! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-codearea! (action el)
             match (element-query-selector el |.source-code)
@@ -205,9 +199,7 @@
               (:none) &unit
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Tag 'js-ffi.browser/DomElementHost
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Tag js-ffi.browser/DomElementHost (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require
@@ -229,12 +221,12 @@
               get-env |mode
               , .unwrap-or |release
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
             {} (:dev-ui |http://localhost:8100/main-fonts.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main-fonts.css) (:title "|九章编程") (:icon |http://cdn.tiye.me/logo/cirru.png) (:storage-key |jiuzhang)
           :examples $ []
-          :schema $ :: 'Map 'Tag 'String
+          :schema $ quote $ Map Tag String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
     'app.counting $ %{} 'FileEntry
@@ -242,7 +234,7 @@
         'chinese-pattern $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def chinese-pattern (create-regexp |^[\u4e00-\u9fa5]{2}$)
           :examples $ []
-          :schema $ :: 'app.program/RegexHost
+          :schema $ quote app.program/RegexHost
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             let
@@ -267,9 +259,7 @@
                 , &newline
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.counting
           :require (|fs :as fs)
@@ -280,15 +270,14 @@
           :code $ quote $ defref *reel
             -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Ref (Map Tag Dynamic)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
             reset! *reel $ reel-updater updater @*reel op
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Unit)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -297,16 +286,14 @@
             listen-devtools! |k dispatch!
             println "|App started."
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
             .query-selector (js-cast js/document 'respo.dom/DomDocument) |.app
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-            :features $ #{} :js-ffi
-            :return $ :: 'JsNullish 'respo.dom/DomElement
+          :schema $ quote $ Fn
+            -> $ JsNullish respo.dom/DomElement
+            :features :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if
@@ -314,19 +301,17 @@
               hud! |error build-errors
               do (hud! |inactive nil) (remove-watch! *reel :changes) (clear-cache!)
                 add-watch! *reel :changes $ fn (reel p) (render-app!)
-                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store updater) (:: 'Map 'Tag 'Dynamic)
+                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store updater)
+                  quote $ Map Tag Dynamic
                 println "|Code updated."
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render! (mount-target) (comp-container @*reel) dispatch!
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
@@ -346,40 +331,32 @@
         '*stdout-logs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *stdout-logs |
           :examples $ []
-          :schema $ :: 'Ref 'String
+          :schema $ quote $ Ref String
         'ArrayHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait ArrayHost
-            .push $ :: 'Fn $ {}
-              :args $ [] 'ArrayHost 'Dynamic
-              :return 'Dynamic
+            .push $ quote $ Fn ArrayHost Dynamic (-> Dynamic)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'NzhHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait NzhHost
-            .encode-s $ :: 'Fn $ {}
-              :args $ [] 'NzhHost 'Number
-              :return 'String
-            .decode-s $ :: 'Fn $ {}
-              :args $ [] 'NzhHost 'String
-              :return 'Dynamic
+            .encode-s $ quote $ Fn NzhHost Number (-> String)
+            .decode-s $ quote $ Fn NzhHost String (-> Dynamic)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:decode-s |decodeS) (:encode-s |encodeS)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'RegexHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait RegexHost
-            .test $ :: 'Fn $ {}
-              :args $ [] 'RegexHost 'String
-              :return 'Bool
+            .test $ quote $ Fn RegexHost String (-> Bool)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'call-add $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-add (xs scope stdout)
             let[] (raw-params new-scope) (extract-params xs scope stdout)
               let
-                  params $ decode-map-as raw-params $ :: 'List 'Number
+                  params $ decode-map-as raw-params $ quote (List Number)
                 []
                   let
                       operands params
@@ -388,9 +365,9 @@
                       , &+
                   , new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-call $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-call (head body scope stdout)
             let[] (params new-scope) (extract-params body scope stdout)
@@ -400,13 +377,14 @@
                     , .unwrap-or nil
                 ; println |*scope @scope f
                 if (fn? f)
-                  decode-map-as (f & params) (:: 'List 'Dynamic)
+                  decode-map-as (f & params)
+                    quote $ List Dynamic
                   raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" f
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'call-define $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-define (var-name value-name scope stdout)
             cond
@@ -416,13 +394,13 @@
               true $ let[] (v new-scope) (call-expression value-name scope stdout)
                 [] v $ assoc scope var-name v
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-defn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-defn (raw-body parent-scope stdout)
             let
-                body $ decode-map-as raw-body $ :: 'List 'Dynamic
+                body $ decode-map-as raw-body $ quote (List Dynamic)
               let
                   f-name $ decode-map-as
                       get body 0
@@ -431,16 +409,13 @@
                   f-params $ decode-map-as
                       get body 1
                       , .unwrap
-                    :: 'List 'String
+                    quote $ List String
                   f-body $ slice body 2
                 when (empty? f-body)
                   raise $ str "|未有函数体"
                 let
                     f $ fn (& ys)
-                      hint-fn $ {}
-                        :args $ []
-                        :rest 'Dynamic
-                        :return $ :: 'List 'Dynamic
+                      hint-fn $ Fn & Dynamic $ -> (List Dynamic)
                       when-not
                         = (.len ys) (.len f-params)
                         raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
@@ -460,9 +435,8 @@
                             ret nil
                             s scope-inner
                             xs f-body
-                          hint-fn $ {}
-                            :args $ [] 'Dynamic 'Dynamic $ :: 'List 'Dynamic
-                            :return $ :: 'List 'Dynamic
+                          hint-fn $ Fn Dynamic Dynamic (List Dynamic)
+                            -> $ List Dynamic
                           if (empty? xs) ([] ret s)
                             let[] (v s2)
                               call-expression
@@ -472,13 +446,13 @@
                               recur v s2 $ rest xs
                   [] f $ assoc parent-scope f-name f
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-divide $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-divide (raw-body scope stdout)
             let
-                body $ decode-map-as raw-body $ :: 'List 'Dynamic
+                body $ decode-map-as raw-body $ quote (List Dynamic)
               cond
                   empty? body
                   [] 1 scope
@@ -493,7 +467,7 @@
                       , new-scope
                 true $ let[] (raw-params new-scope) (extract-params body scope stdout)
                   let
-                      params $ decode-map-as raw-params $ :: 'List 'Number
+                      params $ decode-map-as raw-params $ quote (List Number)
                     let
                         x0 $
                           first params
@@ -505,18 +479,17 @@
                             , &+
                       [] (&/ x0 delta) new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-do $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-do (body scope stdout)
             loop
                 ret nil
                 s scope
                 xs body
-              hint-fn $ {}
-                :args $ [] 'Dynamic 'Dynamic $ :: 'List 'Dynamic
-                :return $ :: 'List 'Dynamic
+              hint-fn $ Fn Dynamic Dynamic (List Dynamic)
+                -> $ List Dynamic
               if (empty? xs) ([] ret s)
                 let[] (v s2)
                   call-expression
@@ -525,22 +498,22 @@
                     , s stdout
                   recur v s2 $ rest xs
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'Dynamic) 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List Dynamic) Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-equal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-equal (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
+                xs $ decode-map-as raw-xs $ quote (List Dynamic)
               assert "|\"直\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
                   = (get params 0) (get params 1)
                   , scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-expression $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-expression (expr scope stdout)
             cond
@@ -605,13 +578,13 @@
                     true $ raise $ str "|未知几何也" (to-lispy-string expr)
               true $ raise $ str "|未知几何也" (to-lispy-string expr)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-filter $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-filter (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
+                xs $ decode-map-as raw-xs $ quote (List Dynamic)
               assert "|\"其\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 let
@@ -624,12 +597,10 @@
                   if (fn? f)
                     let
                         callback $ fn (x)
-                          hint-fn $ {}
-                            :args $ [] 'Dynamic
-                            :return 'Bool
-                            :features $ #{} :js-ffi
+                          hint-fn $ Fn Dynamic (-> Bool) (:features :js-ffi)
                           if
-                              first $ decode-map-as (f x) (:: 'List 'Dynamic)
+                              first $ decode-map-as (f x)
+                                quote $ List Dynamic
                               , .unwrap
                             , true false
                       []
@@ -642,27 +613,24 @@
                         , new-scope
                     raise "|Expected an interpreter function"
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'call-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-fn (raw-body parent-scope stdout)
             let
-                body $ decode-map-as raw-body $ :: 'List 'Dynamic
+                body $ decode-map-as raw-body $ quote (List Dynamic)
               let
                   f-params $ decode-map-as
                       get body 0
                       , .unwrap
-                    :: 'List 'String
+                    quote $ List String
                   f-body $ slice body 1
                 when (empty? f-body) (raise "|未有函数体")
                 []
                   fn (& ys)
-                    hint-fn $ {}
-                      :args $ []
-                      :rest 'Dynamic
-                      :return $ :: 'List 'Dynamic
+                    hint-fn $ Fn & Dynamic $ -> (List Dynamic)
                     when-not
                       = (.len ys) (.len f-params)
                       raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
@@ -681,9 +649,8 @@
                           ret nil
                           s scope
                           xs f-body
-                        hint-fn $ {}
-                          :args $ [] 'Dynamic 'Dynamic $ :: 'List 'Dynamic
-                          :return $ :: 'List 'Dynamic
+                        hint-fn $ Fn Dynamic Dynamic (List Dynamic)
+                          -> $ List Dynamic
                         if (empty? xs) ([] ret s)
                           let[] (v s2)
                             call-expression
@@ -693,13 +660,13 @@
                             recur v s2 $ rest xs
                   , parent-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-get $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-get (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
+                xs $ decode-map-as raw-xs $ quote (List Dynamic)
               assert "|\"取\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 let
@@ -714,13 +681,14 @@
                       , .unwrap-or nil
                   [] value new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-hashmap $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-hashmap (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ :: 'List (:: 'List 'Dynamic)
+                xs $ decode-map-as raw-xs $ quote
+                  List $ List Dynamic
               []
                 -> xs
                   map $ fn (pair)
@@ -733,9 +701,9 @@
                   pairs-map
                 , scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-host $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-host (raw-head body scope stdout)
             let
@@ -748,14 +716,14 @@
                     [] (f & params) new-scope
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'call-if $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-if (raw-body scope stdout)
             let
-                body $ decode-map-as raw-body $ :: 'List 'Dynamic
+                body $ decode-map-as raw-body $ quote (List Dynamic)
               assert "|\"若\"需传入\"条件\"及\"结果\"" $ >= (.len body) 2
               let
                   condition $
@@ -774,13 +742,13 @@
                   call-expression then-part scope stdout
                   if (nil? else-part) ([] nil scope) (call-expression else-part scope stdout)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-larger $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-larger (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
+                xs $ decode-map-as raw-xs $ quote (List Dynamic)
               assert "|\"多于\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
@@ -795,13 +763,13 @@
                       , 'Number
                   , new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-littler $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-littler (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
+                xs $ decode-map-as raw-xs $ quote (List Dynamic)
               assert "|\"少于\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
@@ -816,13 +784,13 @@
                       , 'Number
                   , new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-map (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
+                xs $ decode-map-as raw-xs $ quote (List Dynamic)
               assert "|\"各\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 let
@@ -835,11 +803,8 @@
                   if (fn? f)
                     let
                         callback $ fn (x)
-                          hint-fn $ {}
-                            :args $ [] 'Dynamic
-                            :return 'Dynamic
-                            :features $ #{} :js-ffi
-                          (first (decode-map-as (f x) (:: 'List 'Dynamic)))
+                          hint-fn $ Fn Dynamic (-> Dynamic) (:features :js-ffi)
+                          (first (decode-map-as (f x) (quote (List Dynamic))))
                             , .unwrap
                       []
                         cond
@@ -848,18 +813,18 @@
                           (set? items) (map items callback)
                           (map? items)
                             map items $ fn (pair)
-                              hint-fn $ {}
-                                :args $ [] $ :: 'List 'Dynamic
-                                :return $ :: 'List 'Dynamic
-                              decode-map-as (callback pair) (:: 'List 'Dynamic)
+                              hint-fn $ Fn (List Dynamic)
+                                -> $ List Dynamic
+                              decode-map-as (callback pair)
+                                quote $ List Dynamic
                           true $ raise "|Expected a list, set or map"
                         , new-scope
                     raise "|Expected an interpreter function"
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'call-method $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-method (raw-head body scope stdout)
             let
@@ -867,7 +832,7 @@
               ; js/console.log head body
               let[] (raw-ret params) (extract-params body scope stdout)
                 let
-                    ret $ decode-map-as raw-ret $ :: 'List 'Dynamic
+                    ret $ decode-map-as raw-ret $ quote (List Dynamic)
                     obj $
                       get ret 0
                       , .unwrap
@@ -878,14 +843,14 @@
                     .?!apply method obj $ to-js-data args
                     , scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'call-minus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-minus (raw-body scope stdout)
             let
-                body $ decode-map-as raw-body $ :: 'List 'Dynamic
+                body $ decode-map-as raw-body $ quote (List Dynamic)
               cond
                   empty? body
                   [] 0 scope
@@ -900,7 +865,7 @@
                       , new-scope
                 true $ let[] (raw-params new-scope) (extract-params body scope stdout)
                   let
-                      params $ decode-map-as raw-params $ :: 'List 'Number
+                      params $ decode-map-as raw-params $ quote (List Number)
                     let
                         x0 $
                           first params
@@ -912,14 +877,14 @@
                             , &+
                       [] (- x0 delta) new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-multiply $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-multiply (xs scope stdout)
             let[] (raw-params new-scope) (extract-params xs scope stdout)
               let
-                  params $ decode-map-as raw-params $ :: 'List 'Number
+                  params $ decode-map-as raw-params $ quote (List Number)
                 []
                   let
                       operands params
@@ -928,9 +893,9 @@
                       , &*
                   , new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-native $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-native (raw-head body scope stdout)
             let
@@ -947,14 +912,14 @@
                       [] (.!apply f nil args) new-scope
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'call-native-hashmap $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-native-hashmap (raw-body scope stdout)
             let
-                body $ decode-map-as raw-body $ :: 'List 'Dynamic
+                body $ decode-map-as raw-body $ quote (List Dynamic)
               if
                 and
                   = 0 $ &number:rem (.len body) 2
@@ -962,15 +927,15 @@
                 []
                   let[] (params new-scope) (extract-params body scope stdout)
                     pairs-map $ chunks
-                      decode-map-as params $ :: 'List 'Dynamic
+                      decode-map-as params $ quote $ List Dynamic
                       , 2
                   , scope
                 raise "|unknown structure for &置"
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'call-negate $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-negate (x scope stdout)
             let[] (v new-scope) (call-expression x scope stdout)
@@ -978,41 +943,41 @@
                 negate $ decode-map-as v 'Number
                 , new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-new $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-new (x scope stdout)
             let[] (v new-scope) (call-expression x scope stdout)
               [] (new v) new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'call-not $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-not (x scope stdout)
             let[] (v new-scope) (call-expression x scope stdout)
               [] (not v) new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-println $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-println (xs scope stdout)
             let[] (raw-acc scope) (extract-params xs scope stdout)
               let
-                  acc $ decode-map-as raw-acc $ :: 'List 'Dynamic
+                  acc $ decode-map-as raw-acc $ quote (List Dynamic)
                 stdout $ join-string (map acc format-value) "| "
                 [] nil scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-require $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-require (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
+                xs $ decode-map-as raw-xs $ quote (List Dynamic)
               assert "|\"引\"需一参数" $ = 1 $ .len xs
               []
                 .?!require js/globalThis $
@@ -1020,10 +985,10 @@
                   , .unwrap
                 , scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'call-self-multiply $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-self-multiply (x scope stdout)
             let[] (v new-scope) (call-expression x scope stdout)
@@ -1033,32 +998,29 @@
                   * number number
                 , new-scope
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'call-vector $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-vector (xs scope stdout) (extract-params xs scope stdout)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
         'create-regexp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-regexp (pattern)
             js-cast (new js/RegExp pattern) 'app.program/RegexHost
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'app.program/RegexHost)
-            :args $ [] 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String (-> app.program/RegexHost) (:features :js-ffi)
         'extract-params $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-params (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
+                xs $ decode-map-as raw-xs $ quote (List Dynamic)
               loop
                   acc $ []
                   params xs
-                hint-fn $ {}
-                  :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
-                  :return $ :: 'List 'Dynamic
+                hint-fn $ Fn (List Dynamic) (List Dynamic)
+                  -> $ List Dynamic
                 if (empty? params) ([] acc scope)
                   let[] (ret new-scope)
                     call-expression
@@ -1067,14 +1029,14 @@
                       , scope stdout
                     recur (conj acc ret) (rest params)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'flat-map-structure? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn flat-map-structure? (raw-xs)
             let
-                xs $ decode-map-as raw-xs $ :: 'List 'Dynamic
+                xs $ decode-map-as raw-xs $ quote (List Dynamic)
               let
                   size $ .len xs
                 if
@@ -1089,8 +1051,7 @@
                           (:none) false
                   , false
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
         'format-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn format-value (x)
             cond
@@ -1125,13 +1086,11 @@
               (symbol? x) (to-string x)
               true $ to-lispy-string x
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (-> String) (:features :js-ffi)
         'number-pattern $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def number-pattern (create-regexp "|[一二两三四五六七八九零十百千万亿负点]+")
           :examples $ []
-          :schema $ :: 'app.program/RegexHost
+          :schema $ quote app.program/RegexHost
         'read-native-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-native-fn (o xs) (; println "|取" xs)
             if (empty? xs) o $ if (nil? o)
@@ -1142,9 +1101,7 @@
                     , .unwrap
                 recur o' $ rest xs
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (List String) (-> Dynamic) (:features :js-ffi)
         'resolve-literal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-literal (raw-token scope stdout)
             let
@@ -1177,19 +1134,16 @@
                     , scope
                 true $ raise $ str "|未知几何也" (to-string token)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            Fn String $ -> Unit
+            -> $ List Dynamic
+            :features :js-ffi
         'run-program $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-program (source)
             let
                 instructions $ parse-cirru-list source
                 stdout $ fn (& args)
-                  hint-fn $ {}
-                    :args $ []
-                    :rest 'String
-                    :return 'Unit
+                  hint-fn $ Fn & String $ -> Unit
                   reset! *stdout-logs $ str @*stdout-logs &newline $ join-string args "| "
                   , &unit
               reset! *stdout-logs |
@@ -1198,9 +1152,8 @@
                     ret nil
                     scope $ {}
                     xs instructions
-                  hint-fn $ {}
-                    :args $ [] 'Dynamic 'Dynamic $ :: 'List 'Dynamic
-                    :return $ :: 'List 'Dynamic
+                  hint-fn $ Fn Dynamic Dynamic (List Dynamic)
+                    -> $ List Dynamic
                   if (empty? xs) ([] ret @*stdout-logs)
                     let[] (r next-scope)
                       call-expression
@@ -1209,23 +1162,33 @@
                         , scope stdout
                       recur r next-scope $ rest xs
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'String
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn String
+            -> $ List Dynamic
+            :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.program
           :require $ |nzh/cn :default nzh
     'app.schema $ %{} 'FileEntry
-      :defs $ {} $ 'store
-        %{} 'CodeEntry (:doc |)
+      :defs $ {}
+        'Op $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defenum Op
+            :states
+              quote $ List Dynamic
+              , Dynamic
+            :content Dynamic
+            :result Dynamic
+            :error-result Dynamic
+            :hydrate-storage $ quote $ Map Tag Dynamic
+          :examples $ []
+          :schema $ quote EnumDef
+        'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             {}
               :states $ {}
               :content |
               :result |
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ quote Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.test $ %{} 'FileEntry
@@ -1239,33 +1202,26 @@
               let[] (ret logs) (run-program source)
                 trim $ decode-map-as logs 'String
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String (-> String) (:features :js-ffi)
         'load-log $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn load-log (x)
             trim $ decode-map-as
               fs/readFileSync (path/join |. |tests x) |utf8
               , 'String
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String (-> String) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (run-tests!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! () (println |Reloaded) (run-tests!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
         'run-tests! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-tests! () (test-fibo) (test-data) (test-fn) (test-if) (test-list) (test-math) (test-native-api) (test-variables)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
         'test-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-data () (println "|Testing 聚物于列于置")
             is $ = (load-log |data.log) (eval-out |data.cirru)
@@ -1279,51 +1235,42 @@
             is $ = false $ .test chinese-pattern "|甲\n"
             is $ = false $ .test chinese-pattern "|甲乙A"
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'test-fibo $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-fibo () (println "|Testing 菲氏数也")
             is $ = (load-log |fibo.log) (eval-out |fibo.cirru)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
         'test-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-fn () (println "|Testing 函数")
             is $ = (load-log |fn.log) (eval-out |fn.cirru)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
         'test-if $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-if () (println "|Testing 若判断语句")
             is $ = (load-log |if.log) (eval-out |if.cirru)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
         'test-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-list () (println "|Testing 取数于列")
             is $ = (load-log |list.log) (eval-out |list.cirru)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
         'test-math $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-math () (println "|Testing 算术")
             is $ = (load-log |variables.log) (eval-out |variables.cirru)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
         'test-native-api $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-native-api () (println "|Testing 用平台之函数")
             is $ = (load-log |native-api.log) (eval-out |native-api.cirru)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
         'test-variables $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-variables () (println "|Testing 数有其名也")
             is $ = (load-log |math.log) (eval-out |math.cirru)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
+          :schema $ quote $ Fn (-> Dynamic)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.test
           :require
@@ -1337,24 +1284,23 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (raw-store op op-id op-time)
             let
-                store $ decode-map-as raw-store $ :: 'Map 'Tag 'Dynamic
+                store $ decode-map-as raw-store $ quote (Map Tag Dynamic)
               match op
                 (:states cursor s)
                   decode-map-as
                     update-states store
-                      decode-map-as cursor $ :: 'List 'Dynamic
+                      decode-map-as cursor $ quote $ List Dynamic
                       , s
-                    :: 'Map 'Tag 'Dynamic
+                    quote $ Map Tag Dynamic
                 (:content data) (assoc store :content data)
                 (:result data) (assoc store :result data)
                 (:error-result data) (assoc store :error-result data)
                 (:hydrate-storage data)
-                  decode-map-as data $ :: 'Map 'Tag 'Dynamic
+                  decode-map-as data $ quote $ Map Tag Dynamic
                 _ store
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic Dynamic Dynamic
+            -> $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require $ respo.cursor :refer $ update-states
