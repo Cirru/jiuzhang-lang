@@ -366,7 +366,7 @@
                   , new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-call $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-call (head body scope stdout)
@@ -382,7 +382,7 @@
                   raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" f
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-define $ %{} 'CodeEntry (:doc |)
@@ -395,7 +395,7 @@
                 [] v $ assoc scope var-name v
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-defn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-defn (raw-body parent-scope stdout)
@@ -447,7 +447,7 @@
                   [] f $ assoc parent-scope f-name f
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-divide $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-divide (raw-body scope stdout)
@@ -480,7 +480,7 @@
                       [] (&/ x0 delta) new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-do $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-do (body scope stdout)
@@ -499,7 +499,7 @@
                   recur v s2 $ rest xs
           :examples $ []
           :schema $ quote $ Fn (List Dynamic) Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-equal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-equal (raw-xs scope stdout)
@@ -512,7 +512,7 @@
                   , scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-expression $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-expression (expr scope stdout)
@@ -579,7 +579,7 @@
               true $ raise $ str "|未知几何也" (to-lispy-string expr)
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-filter $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-filter (raw-xs scope stdout)
@@ -614,7 +614,7 @@
                     raise "|Expected an interpreter function"
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-fn $ %{} 'CodeEntry (:doc |)
@@ -661,7 +661,7 @@
                   , parent-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-get $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-get (raw-xs scope stdout)
@@ -682,7 +682,7 @@
                   [] value new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-hashmap $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-hashmap (raw-xs scope stdout)
@@ -702,7 +702,7 @@
                 , scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-host $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-host (raw-head body scope stdout)
@@ -717,7 +717,7 @@
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-if $ %{} 'CodeEntry (:doc |)
@@ -743,7 +743,7 @@
                   if (nil? else-part) ([] nil scope) (call-expression else-part scope stdout)
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-larger $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-larger (raw-xs scope stdout)
@@ -764,7 +764,7 @@
                   , new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-littler $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-littler (raw-xs scope stdout)
@@ -785,7 +785,7 @@
                   , new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-map (raw-xs scope stdout)
@@ -822,7 +822,7 @@
                     raise "|Expected an interpreter function"
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-method $ %{} 'CodeEntry (:doc |)
@@ -844,7 +844,7 @@
                     , scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-minus $ %{} 'CodeEntry (:doc |)
@@ -878,7 +878,7 @@
                       [] (- x0 delta) new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-multiply $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-multiply (xs scope stdout)
@@ -894,7 +894,7 @@
                   , new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-native $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-native (raw-head body scope stdout)
@@ -913,7 +913,7 @@
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-native-hashmap $ %{} 'CodeEntry (:doc |)
@@ -933,7 +933,7 @@
                 raise "|unknown structure for &置"
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-negate $ %{} 'CodeEntry (:doc |)
@@ -944,7 +944,7 @@
                 , new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-new $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-new (x scope stdout)
@@ -952,7 +952,7 @@
               [] (new v) new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-not $ %{} 'CodeEntry (:doc |)
@@ -961,7 +961,7 @@
               [] (not v) new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-println $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-println (xs scope stdout)
@@ -972,7 +972,7 @@
                 [] nil scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-require $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-require (raw-xs scope stdout)
@@ -986,7 +986,7 @@
                 , scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-self-multiply $ %{} 'CodeEntry (:doc |)
@@ -999,13 +999,13 @@
                 , new-scope
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'call-vector $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-vector (xs scope stdout) (extract-params xs scope stdout)
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
         'create-regexp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-regexp (pattern)
@@ -1030,7 +1030,7 @@
                     recur (conj acc ret) (rest params)
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'flat-map-structure? $ %{} 'CodeEntry (:doc |)
@@ -1135,7 +1135,7 @@
                 true $ raise $ str "|未知几何也" (to-string token)
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
-            Fn & String $ -> Unit
+            Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'run-program $ %{} 'CodeEntry (:doc |)

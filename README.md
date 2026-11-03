@@ -19,7 +19,7 @@ Respo **0.18.1**、JS-FFI **0.2.9**，传递的 Router 版本为 **0.10.1**。Ca
 及 immutable 安装已通过，不再依赖本地候选链接。该图保留 Map 事件兼容合同，不与 Respo
 0.19 新事件图混装。
 
-31 处解释器输出回调由 Dynamic 明确为 `Fn & String (-> Unit)`，宿主属性路径明确为
+31 处解释器输出回调由 Dynamic 明确为 `Fn String (-> Unit)`，宿主属性路径明确为
 `List String`，固定文案明确为 String；没有将任意解释器值和 JS 宿主返回值伪装成闭合 union。
 入口根据已有 updater 五种操作声明名义 Op，绑定 Respo 的 dispatch-op 类型槽；异构状态
 和内容载荷保持原开放边界。可选开发面板、重置按钮、错误区域显式使用 Option，显示条件保持。
