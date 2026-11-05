@@ -49,7 +49,7 @@
                 store $ decode-map-as
                     get reel :store
                     , .unwrap-or $ {}
-                  quote $ Map Tag Dynamic
+                  Map Tag Dynamic
                 states $
                   get store :states
                   , .unwrap-or $ {}
@@ -63,7 +63,7 @@
                     {} $ :style $ {} (:margin :auto) (:max-width 960)
                     div ({})
                       <> "|九章编程" $ {} (:font-size 40) (:font-family ui/font-fancy)
-                      =< 8 nil
+                      respo.comp.space/space-x 8
                       <> "|(The Nine Chapters on the Mathematical Art)" $ {} (:font-size 18) (:font-family ui/font-fancy) (:font-weight 300)
                     div
                       {} $ :style $ {} (:width |60%)
@@ -104,13 +104,14 @@
         'comp-runner $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-runner (states title code0)
             let
-                cursor $
-                  get states :cursor
-                  , .unwrap-or $ []
+                cursor $ decode-map-as
+                    get states :cursor
+                    , .unwrap-or $ []
+                  List respo.schema/CoordKey
                 state $ decode-map-as
                     get states :data
                     , .unwrap-or $ {} (:code code0) (:result "|按 \"点击按钮运行\"") (:error |)
-                  quote $ Map Tag Dynamic
+                  Map Tag Dynamic
                 code $ decode-map-as
                     get state :code
                     , .unwrap-or code0
@@ -129,7 +130,7 @@
                     :background-color $ hsl 0 0 98
                     :padding |16px
                   div ({}) (<> title)
-                  =< nil 8
+                  respo.comp.space/space-y 8
                   div
                     {} $ :style ui/row
                     textarea $ {} (:value code) (:class-name |source-code) (:placeholder |Content)
@@ -137,11 +138,18 @@
                         :border $ str "|1px solid " $ hsl 0 0 93
                         :background-color :white
                       :on-input $ fn (e d!)
-                        d! cursor $ assoc state :code $ decode-map-as
-                            get e :value
-                            , .unwrap-or |
-                          , 'String
-                    =< 16 nil
+                        hint-fn $ Fn respo.schema/RespoEvent
+                          Fn app.schema/Op $ -> Unit
+                          -> Unit
+                          :features :js-ffi
+                        d! $ app.schema/Op :states cursor $ assoc state :code
+                          let
+                              value $ :value e
+                            if
+                              or (nil? value)
+                                = :unit $ type-of value
+                              , | $ decode-map-as value String
+                    respo.comp.space/space-x 16
                     div
                       {} $ :style ui/expand
                       div
@@ -150,16 +158,17 @@
                           :on-click $ fn (e d!)
                             try
                               let[] (ret out) (run-program code) (println |Result: ret)
-                                d! cursor $ .merge state $ {}
-                                  :result $ decode-map-as out 'String
-                                  :error |
+                                d! $ app.schema/Op :states cursor $ .merge state
+                                  {} (:result out) (:error |)
                               fn (err)
-                                d! cursor $ .merge state $ {} (:result |)
-                                  :error $ str err
+                                d! $ app.schema/Op :states cursor $ .merge state
+                                  {} (:result |)
+                                    :error $ str err
                         if (not= code code0)
                           %:: Option :some $ a $ {} (:inner-text "|重置") (:style ui/link)
                             :on-click $ fn (e d!)
-                              d! cursor $ .merge state $ {} (:code code0) (:result |) (:error |)
+                              d! $ app.schema/Op :states cursor $ .merge state
+                                {} (:code code0) (:result |) (:error |)
                           %:: Option :none
                       if (blank? error) (%:: Option :none)
                         %:: Option :some $ pre $ {}
@@ -169,7 +178,7 @@
                         :style $ {} $ :background-color :transparent
                         :inner-text result
           :examples $ []
-          :schema $ quote $ Fn Dynamic String String (-> respo.schema/Component) (:features :js-ffi)
+          :schema $ quote $ Fn respo.schema/States String String (-> respo.schema/Component) (:features :js-ffi)
         'effect-codearea $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-codearea () (action el)
             update-codearea! (decode-map-as action 'Tag) (element-host el)
@@ -301,8 +310,7 @@
               hud! |error build-errors
               do (hud! |inactive nil) (remove-watch! *reel :changes) (clear-cache!)
                 add-watch! *reel :changes $ fn (reel p) (render-app!)
-                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store updater)
-                  quote $ Map Tag Dynamic
+                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store updater) (Map Tag Dynamic)
                 println "|Code updated."
             , &unit
           :examples $ []
@@ -334,21 +342,21 @@
           :schema $ quote $ Ref String
         'ArrayHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait ArrayHost
-            .push $ quote $ Fn ArrayHost Dynamic (-> Dynamic)
+            .push $ Fn ArrayHost Dynamic $ -> Dynamic
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
           :schema $ quote Trait
         'NzhHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait NzhHost
-            .encode-s $ quote $ Fn NzhHost Number (-> String)
-            .decode-s $ quote $ Fn NzhHost String (-> Dynamic)
+            .encode-s $ Fn NzhHost Number $ -> String
+            .decode-s $ Fn NzhHost String $ -> Dynamic
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:decode-s |decodeS) (:encode-s |encodeS)
           :schema $ quote Trait
         'RegexHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait RegexHost
-            .test $ quote $ Fn RegexHost String (-> Bool)
+            .test $ Fn RegexHost String $ -> Bool
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
           :schema $ quote Trait
@@ -356,7 +364,7 @@
           :code $ quote $ defn call-add (xs scope stdout)
             let[] (raw-params new-scope) (extract-params xs scope stdout)
               let
-                  params $ decode-map-as raw-params $ quote (List Number)
+                  params $ decode-map-as raw-params $ List Number
                 []
                   let
                       operands params
@@ -377,8 +385,7 @@
                     , .unwrap-or nil
                 ; println |*scope @scope f
                 if (fn? f)
-                  decode-map-as (f & params)
-                    quote $ List Dynamic
+                  decode-map-as (f & params) (List Dynamic)
                   raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" f
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic Dynamic
@@ -400,7 +407,7 @@
         'call-defn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-defn (raw-body parent-scope stdout)
             let
-                body $ decode-map-as raw-body $ quote (List Dynamic)
+                body $ decode-map-as raw-body $ List Dynamic
               let
                   f-name $ decode-map-as
                       get body 0
@@ -409,7 +416,7 @@
                   f-params $ decode-map-as
                       get body 1
                       , .unwrap
-                    quote $ List String
+                    List String
                   f-body $ slice body 2
                 when (empty? f-body)
                   raise $ str "|未有函数体"
@@ -452,7 +459,7 @@
         'call-divide $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-divide (raw-body scope stdout)
             let
-                body $ decode-map-as raw-body $ quote (List Dynamic)
+                body $ decode-map-as raw-body $ List Dynamic
               cond
                   empty? body
                   [] 1 scope
@@ -467,7 +474,7 @@
                       , new-scope
                 true $ let[] (raw-params new-scope) (extract-params body scope stdout)
                   let
-                      params $ decode-map-as raw-params $ quote (List Number)
+                      params $ decode-map-as raw-params $ List Number
                     let
                         x0 $
                           first params
@@ -504,7 +511,7 @@
         'call-equal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-equal (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ quote (List Dynamic)
+                xs $ decode-map-as raw-xs $ List Dynamic
               assert "|\"直\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
@@ -584,7 +591,7 @@
         'call-filter $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-filter (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ quote (List Dynamic)
+                xs $ decode-map-as raw-xs $ List Dynamic
               assert "|\"其\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 let
@@ -599,8 +606,7 @@
                         callback $ fn (x)
                           hint-fn $ Fn Dynamic (-> Bool) (:features :js-ffi)
                           if
-                              first $ decode-map-as (f x)
-                                quote $ List Dynamic
+                              first $ decode-map-as (f x) (List Dynamic)
                               , .unwrap
                             , true false
                       []
@@ -620,12 +626,12 @@
         'call-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-fn (raw-body parent-scope stdout)
             let
-                body $ decode-map-as raw-body $ quote (List Dynamic)
+                body $ decode-map-as raw-body $ List Dynamic
               let
                   f-params $ decode-map-as
                       get body 0
                       , .unwrap
-                    quote $ List String
+                    List String
                   f-body $ slice body 1
                 when (empty? f-body) (raise "|未有函数体")
                 []
@@ -666,7 +672,7 @@
         'call-get $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-get (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ quote (List Dynamic)
+                xs $ decode-map-as raw-xs $ List Dynamic
               assert "|\"取\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 let
@@ -687,8 +693,7 @@
         'call-hashmap $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-hashmap (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ quote
-                  List $ List Dynamic
+                xs $ decode-map-as raw-xs $ List (List Dynamic)
               []
                 -> xs
                   map $ fn (pair)
@@ -723,7 +728,7 @@
         'call-if $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-if (raw-body scope stdout)
             let
-                body $ decode-map-as raw-body $ quote (List Dynamic)
+                body $ decode-map-as raw-body $ List Dynamic
               assert "|\"若\"需传入\"条件\"及\"结果\"" $ >= (.len body) 2
               let
                   condition $
@@ -748,7 +753,7 @@
         'call-larger $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-larger (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ quote (List Dynamic)
+                xs $ decode-map-as raw-xs $ List Dynamic
               assert "|\"多于\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
@@ -769,7 +774,7 @@
         'call-littler $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-littler (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ quote (List Dynamic)
+                xs $ decode-map-as raw-xs $ List Dynamic
               assert "|\"少于\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 []
@@ -790,7 +795,7 @@
         'call-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-map (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ quote (List Dynamic)
+                xs $ decode-map-as raw-xs $ List Dynamic
               assert "|\"各\"需二参数" $ = 2 $ .len xs
               let[] (params new-scope) (extract-params xs scope stdout)
                 let
@@ -804,7 +809,7 @@
                     let
                         callback $ fn (x)
                           hint-fn $ Fn Dynamic (-> Dynamic) (:features :js-ffi)
-                          (first (decode-map-as (f x) (quote (List Dynamic))))
+                          (first (decode-map-as (f x) (List Dynamic)))
                             , .unwrap
                       []
                         cond
@@ -813,10 +818,9 @@
                           (set? items) (map items callback)
                           (map? items)
                             map items $ fn (pair)
-                              hint-fn $ Fn (List Dynamic)
-                                -> $ List Dynamic
-                              decode-map-as (callback pair)
-                                quote $ List Dynamic
+                              hint-fn $ Fn (Tuple Dynamic Dynamic)
+                                -> $ Tuple Dynamic Dynamic
+                              decode-map-as (callback pair) (Tuple Dynamic Dynamic)
                           true $ raise "|Expected a list, set or map"
                         , new-scope
                     raise "|Expected an interpreter function"
@@ -832,7 +836,7 @@
               ; js/console.log head body
               let[] (raw-ret params) (extract-params body scope stdout)
                 let
-                    ret $ decode-map-as raw-ret $ quote (List Dynamic)
+                    ret $ decode-map-as raw-ret $ List Dynamic
                     obj $
                       get ret 0
                       , .unwrap
@@ -850,7 +854,7 @@
         'call-minus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-minus (raw-body scope stdout)
             let
-                body $ decode-map-as raw-body $ quote (List Dynamic)
+                body $ decode-map-as raw-body $ List Dynamic
               cond
                   empty? body
                   [] 0 scope
@@ -865,7 +869,7 @@
                       , new-scope
                 true $ let[] (raw-params new-scope) (extract-params body scope stdout)
                   let
-                      params $ decode-map-as raw-params $ quote (List Number)
+                      params $ decode-map-as raw-params $ List Number
                     let
                         x0 $
                           first params
@@ -884,7 +888,7 @@
           :code $ quote $ defn call-multiply (xs scope stdout)
             let[] (raw-params new-scope) (extract-params xs scope stdout)
               let
-                  params $ decode-map-as raw-params $ quote (List Number)
+                  params $ decode-map-as raw-params $ List Number
                 []
                   let
                       operands params
@@ -919,7 +923,7 @@
         'call-native-hashmap $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-native-hashmap (raw-body scope stdout)
             let
-                body $ decode-map-as raw-body $ quote (List Dynamic)
+                body $ decode-map-as raw-body $ List Dynamic
               if
                 and
                   = 0 $ &number:rem (.len body) 2
@@ -927,7 +931,7 @@
                 []
                   let[] (params new-scope) (extract-params body scope stdout)
                     pairs-map $ chunks
-                      decode-map-as params $ quote $ List Dynamic
+                      decode-map-as params $ List Dynamic
                       , 2
                   , scope
                 raise "|unknown structure for &置"
@@ -967,7 +971,7 @@
           :code $ quote $ defn call-println (xs scope stdout)
             let[] (raw-acc scope) (extract-params xs scope stdout)
               let
-                  acc $ decode-map-as raw-acc $ quote (List Dynamic)
+                  acc $ decode-map-as raw-acc $ List Dynamic
                 stdout $ join-string (map acc format-value) "| "
                 [] nil scope
           :examples $ []
@@ -977,7 +981,7 @@
         'call-require $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-require (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ quote (List Dynamic)
+                xs $ decode-map-as raw-xs $ List Dynamic
               assert "|\"引\"需一参数" $ = 1 $ .len xs
               []
                 .?!require js/globalThis $
@@ -1015,7 +1019,7 @@
         'extract-params $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-params (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ quote (List Dynamic)
+                xs $ decode-map-as raw-xs $ List Dynamic
               loop
                   acc $ []
                   params xs
@@ -1036,7 +1040,7 @@
         'flat-map-structure? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn flat-map-structure? (raw-xs)
             let
-                xs $ decode-map-as raw-xs $ quote (List Dynamic)
+                xs $ decode-map-as raw-xs $ List Dynamic
               let
                   size $ .len xs
                 if
@@ -1152,8 +1156,8 @@
                     ret nil
                     scope $ {}
                     xs instructions
-                  hint-fn $ Fn Dynamic Dynamic (List Dynamic)
-                    -> $ List Dynamic
+                  hint-fn $ Fn Dynamic Dynamic (List calcit.core/CirruNode)
+                    -> $ Tuple Dynamic String
                   if (empty? xs) ([] ret @*stdout-logs)
                     let[] (r next-scope)
                       call-expression
@@ -1163,7 +1167,7 @@
                       recur r next-scope $ rest xs
           :examples $ []
           :schema $ quote $ Fn String
-            -> $ List Dynamic
+            -> $ Tuple Dynamic String
             :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.program
@@ -1172,13 +1176,11 @@
       :defs $ {}
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states
-              quote $ List Dynamic
-              , Dynamic
+            :states (List respo.schema/CoordKey) Dynamic
             :content Dynamic
             :result Dynamic
             :error-result Dynamic
-            :hydrate-storage $ quote $ Map Tag Dynamic
+            :hydrate-storage $ Map Tag Dynamic
           :examples $ []
           :schema $ quote EnumDef
         'store $ %{} 'CodeEntry (:doc |)
@@ -1284,19 +1286,19 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (raw-store op op-id op-time)
             let
-                store $ decode-map-as raw-store $ quote (Map Tag Dynamic)
+                store $ decode-map-as raw-store $ Map Tag Dynamic
               match op
                 (:states cursor s)
                   decode-map-as
                     update-states store
-                      decode-map-as cursor $ quote $ List Dynamic
+                      decode-map-as cursor $ List Dynamic
                       , s
-                    quote $ Map Tag Dynamic
+                    Map Tag Dynamic
                 (:content data) (assoc store :content data)
                 (:result data) (assoc store :result data)
                 (:error-result data) (assoc store :error-result data)
                 (:hydrate-storage data)
-                  decode-map-as data $ quote $ Map Tag Dynamic
+                  decode-map-as data $ Map Tag Dynamic
                 _ store
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic Dynamic Dynamic
