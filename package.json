@@ -1,6 +1,6 @@
 {
   "name": "@cirru/jiuzhang",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "九章(jiuzhang) dialect",
   "scripts": {
     "watch-page": "calcit calcit.cirru -w",
@@ -27,7 +27,7 @@
     "vite": "^8.2.2"
   },
   "dependencies": {
-    "@calcit/procs": "0.34.2",
+    "@calcit/procs": "0.35.1",
     "chalk": "^5.0.1",
     "cirru-color": "^0.2.4",
     "copy-text-to-clipboard": "^3.2.2",

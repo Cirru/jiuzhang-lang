@@ -12,26 +12,15 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 
 ### 使用者影响
 
-仍是实验原型，不代表重新启动产品维护。本地迁移候选使用官方 Calcit CLI / `@calcit/procs`
-**0.34.2**，Node 24、Yarn 4.18.0。只使用 `calcit.cirru` / `deps.cirru`，不恢复旧快照。
-模块使用已发布正式 tag：Reel **0.8.1**、Markdown **0.6.0**、UI **0.12.1**、
-Respo **0.18.1**、JS-FFI **0.2.9**，传递的 Router 版本为 **0.10.1**。Caps strict/toolchain
-及 immutable 安装已通过，不再依赖本地候选链接。该图保留 Map 事件兼容合同，不与 Respo
-0.19 新事件图混装。
+九章仍是实验原型。使用本轮源码时，请配对 Calcit CLI 和 `@calcit/procs` **0.35.1**，
+使用 Node 24、Yarn 4.18.0 重新安装依赖并生成 JS。命令行用法、中文语法、运行结果和页面 HUD 沿用原有行为。
 
-31 处解释器输出回调由 Dynamic 明确为 `Fn String (-> Unit)`，宿主属性路径明确为
-`List String`，固定文案明确为 String；没有将任意解释器值和 JS 宿主返回值伪装成闭合 union。
-入口根据已有 updater 五种操作声明名义 Op，绑定 Respo 的 dispatch-op 类型槽；异构状态
-和内容载荷保持原开放边界。可选开发面板、重置按钮、错误区域显式使用 Option，显示条件保持。
-原字符串标题的恒真 fallback 已移除，空字符串仍按原规则显示为空。
+解释器用 `CirruNode` union 保留源码节点类型，运行结果明确为二元组（值、输出文本）。
+Map 的「各」仍向回调传入键值对。网页输入、运行和重置使用类型化事件和名义操作。
+宿主函数仍可返回开放的解释器值，原质量门禁保留。
 
-官方 CLI 规范化旧类型标注。原八组解释器断言、CLI 示例、HUD、旧运行期数据和 Map/可选
-合同保留，不新增验证脚本，不放宽质量基线。当前原八组 Node 测试、CLI Fibonacci 示例与
-构建已通过；完整 strict 覆盖 browser / CLI / test 三入口且 diagnostics 为空。原质量基线
-逐字节保持，schemaDynamic 104→83、unresolved 127→106、unsafe=0；不将这些结果宣称为
-新的浏览器或存档验收。
-整合已有 Dependabot #23 / #28 锁文件补丁，不更改其协作状态。本候选不合并、不部署、
-不发布 tag/npm。历史 npm 包不代表此源码候选。
+正式依赖为 Reel **0.9.2**、Markdown **0.8.1**、UI **0.15.1**、Respo **0.19.4**、
+JS-FFI **0.2.13**，传递依赖 Router **0.12.1**。
 
 ```bash
 caps --strict --ci
