@@ -10,7 +10,7 @@
     :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |js-ffi/
-      :type-slots $ {} $ :dispatch-op |app.schema/Op
+      :type-slots $ {} $ :dispatch-op 'app.schema/DispatchOp
     :test $ {} (:description |) (:init-fn 'app.test/main!) (:mode :js) (:reload-fn 'app.test/reload!) (:target :node)
       :feature-policy $ {}
       :modules $ []
@@ -46,13 +46,8 @@
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                store $ decode-map-as
-                    get reel :store
-                    , .unwrap-or $ {}
-                  Map Tag Dynamic
-                states $
-                  get store :states
-                  , .unwrap-or $ {}
+                store $ :store reel
+                states $ :states store
               div
                 {} $ :style $ .merge ui/global ui/fullscreen
                 div
@@ -92,15 +87,15 @@
                       {} $ :style $ {}
                       comp-md-safe "|Based on toolchains from [Cirru Project](https://github.com/Cirru/)."
                 if dev?
-                  %:: Option :some $ comp-reel (>> states :reel) reel $ {}
+                  %:: Option :some $ comp-typed-reel (>> states :reel) reel $ {}
                   %:: Option :none
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> respo.schema/Component)
+          :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store) (-> respo.schema/Component)
         'comp-md-safe $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-md-safe (text)
-            comp-md (decode-map-as text 'String) ({})
+            comp-md text $ {}
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
+          :schema $ quote $ Fn String (-> respo.schema/Component)
         'comp-runner $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-runner (states title code0)
             let
@@ -216,7 +211,7 @@
             respo-ui.core :as ui
             respo.core :refer $ defcomp defeffect >> <> div button textarea span input pre a
             respo.comp.space :refer $ =<
-            reel.comp.reel :refer $ comp-reel
+            reel.comp.reel :refer $ comp-typed-reel
             respo-md.comp.md :refer $ comp-md
             app.config :refer $ dev?
             |@mvc-works/codearea :refer $ codearea teardownCodearea
@@ -276,17 +271,33 @@
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defref *reel
-            -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
+          :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
-          :schema $ quote $ Ref (Map Tag Dynamic)
+          :schema $ quote $ Ref (reel.typed/State app.schema/Op app.schema/Store)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
-            reset! *reel $ reel-updater updater @*reel op
+            match (typed/decode-control op)
+              (:some control) (dispatch-resolved! control)
+              (:none)
+                match op
+                  (:states cursor data)
+                    dispatch-resolved! $ schema/Op :states
+                      decode-map-as cursor $ List respo.schema/CoordKey
+                      , data
+                  _ $ eprintln "|Unknown op:" op
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
+        'dispatch-resolved! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn dispatch-resolved! (op)
+            hint-fn $ Fn app.schema/ResolvedOp (-> Unit) (:features :js-ffi)
+            reset! *reel $ match op
+              (reel.typed/Control control) (typed/apply-control updater @*reel control)
+              (app.schema/Op action)
+                typed/record-op updater @*reel action (host/random-uuid) (host/now-ms)
+            , &unit
+          :examples $ []
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -310,27 +321,28 @@
               hud! |error build-errors
               do (hud! |inactive nil) (remove-watch! *reel :changes) (clear-cache!)
                 add-watch! *reel :changes $ fn (reel p) (render-app!)
-                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store updater) (Map Tag Dynamic)
+                reset! *reel $ typed/refresh updater @*reel schema/store
                 println "|Code updated."
             , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! (mount-target) (comp-container @*reel) dispatch!
+            render-with! (mount-target)
+              fn () $ comp-container @*reel
+              , dispatch!
           :examples $ []
           :schema $ quote $ Fn (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
-            respo.core :refer $ render! clear-cache!
+            respo.core :refer $ render-with! clear-cache!
             app.comp.container :refer $ comp-container
             app.updater :refer $ updater
             app.schema :as schema
             reel.util :refer $ listen-devtools!
-            reel.core :refer $ reel-updater refresh-reel
-            reel.schema :as reel-schema
-            cljs.reader :refer $ read-string
+            reel.typed :as typed
+            js-ffi.shared :as host
             app.config :as config
             |bottom-tip :default hud!
             |./calcit.build-errors :default build-errors
@@ -379,14 +391,13 @@
         'call-call $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-call (head body scope stdout)
             let[] (params new-scope) (extract-params body scope stdout)
-              let
-                  f $
-                    get scope head
-                    , .unwrap-or nil
-                ; println |*scope @scope f
-                if (fn? f)
-                  decode-map-as (f & params) (List Dynamic)
-                  raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" f
+              match (get scope head)
+                (:some f)
+                  if (fn? f)
+                    decode-map-as (f & params) (List Dynamic)
+                    raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" f
+                (:none)
+                  raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" nil
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic Dynamic
             Fn String $ -> Unit
@@ -395,13 +406,14 @@
         'call-define $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-define (var-name value-name scope stdout)
             cond
-                nil? var-name
+                .none? var-name
                 raise "|未知名也"
-              (nil? value-name) (raise "|未知实也")
-              true $ let[] (v new-scope) (call-expression value-name scope stdout)
-                [] v $ assoc scope var-name v
+              (.none? value-name) (raise "|未知实也")
+              true $ let[] (v new-scope)
+                call-expression (.unwrap value-name) scope stdout
+                [] v $ assoc scope (.unwrap var-name) v
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+          :schema $ quote $ Fn (Option calcit.core/CirruNode) (Option calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-defn $ %{} 'CodeEntry (:doc |)
@@ -528,18 +540,15 @@
                 resolve-literal expr scope stdout
               (list? expr)
                 let
+                    nodes $ decode-map-as expr $ List calcit.core/CirruNode
                     head $
-                      first expr
+                      first nodes
                       , .unwrap
-                    x1 $
-                      get expr 1
-                      , .unwrap-or nil
-                    x2 $
-                      get expr 2
-                      , .unwrap-or nil
+                    x1 $ get nodes 1
+                    x2 $ get nodes 2
                     body $ slice expr 1
-                  cond
-                      string? head
+                  match head
+                    (String head)
                       match head
                         "|今有" $ call-define x1 x2 scope stdout
                         "|有" $ call-define x1 x2 scope stdout
@@ -555,8 +564,8 @@
                         "|乘" $ call-multiply body scope stdout
                         "|减" $ call-minus body scope stdout
                         "|除" $ call-divide body scope stdout
-                        "|自乘" $ call-self-multiply x1 scope stdout
-                        "|负" $ call-negate x1 scope stdout
+                        "|自乘" $ call-self-multiply (require-operand x1) scope stdout
+                        "|负" $ call-negate (require-operand x1) scope stdout
                         "|术曰" $ call-defn body scope stdout
                         "|术" $ call-fn body scope stdout
                         "|若" $ call-if body scope stdout
@@ -564,8 +573,8 @@
                         "|少于" $ call-littler body scope stdout
                         "|直" $ call-equal body scope stdout
                         "|则" $ call-do body scope stdout
-                        "|非" $ call-not x1 scope stdout
-                        "|如" $ call-new x1 scope stdout
+                        "|非" $ call-not (require-operand x1) scope stdout
+                        "|如" $ call-new (require-operand x1) scope stdout
                         "|取" $ call-get body scope stdout
                         "|各" $ call-map body scope stdout
                         "|其" $ call-filter body scope stdout
@@ -580,9 +589,8 @@
                           (starts-with? head |clj/) (call-host head body scope stdout)
                           (contains? scope head) (call-call head body scope stdout)
                           true $ raise $ str "|未有术也, 不知" (to-lispy-string head)
-                    (list? head)
+                    (List _children)
                       raise $ str "|未有术也, 不知" $ to-lispy-string head
-                    true $ raise $ str "|未知几何也" (to-lispy-string expr)
               true $ raise $ str "|未知几何也" (to-lispy-string expr)
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
@@ -682,10 +690,9 @@
                     key $
                       nth params 1
                       , .unwrap
-                    value $
-                      get target key
-                      , .unwrap-or nil
-                  [] value new-scope
+                  match (get target key)
+                    (:some value) ([] value new-scope)
+                    (:none) ([] nil new-scope)
           :examples $ []
           :schema $ quote $ Fn Dynamic Dynamic
             Fn String $ -> Unit
@@ -1106,6 +1113,13 @@
                 recur o' $ rest xs
           :examples $ []
           :schema $ quote $ Fn Dynamic (List String) (-> Dynamic) (:features :js-ffi)
+        'require-operand $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn require-operand (operand)
+            hint-fn $ Fn (Option calcit.core/CirruNode) (-> calcit.core/CirruNode)
+            match operand
+              (:some value) value
+              (:none) (raise "|未知几何也 nil")
+          :examples $ []
         'resolve-literal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-literal (raw-token scope stdout)
             let
@@ -1133,8 +1147,7 @@
                     [] value scope
                 (contains? scope token)
                   []
-                      get scope token
-                      , .unwrap-or nil
+                    .unwrap $ get scope token
                     , scope
                 true $ raise $ str "|未知几何也" (to-string token)
           :examples $ []
@@ -1174,23 +1187,29 @@
           :require $ |nzh/cn :default nzh
     'app.schema $ %{} 'FileEntry
       :defs $ {}
+        'DispatchOp $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ def DispatchOp (:: :unhandled)
+          :examples $ []
+          :schema $ quote AnyEnum
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :states (List respo.schema/CoordKey) Dynamic
-            :content Dynamic
-            :result Dynamic
-            :error-result Dynamic
-            :hydrate-storage $ Map Tag Dynamic
           :examples $ []
           :schema $ quote EnumDef
+        'ResolvedOp $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion ResolvedOp Op reel.typed/Control
+          :examples $ []
+          :schema $ quote UnionDef
+        'Store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct Store
+            :states $ Map Dynamic Dynamic
+          :examples $ []
+          :schema $ quote StructDef
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
-            {}
-              :states $ {}
-              :content |
-              :result |
+            Store :states $ {}
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote app.schema/Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.test $ %{} 'FileEntry
@@ -1284,25 +1303,14 @@
     'app.updater $ %{} 'FileEntry
       :defs $ {} $ 'updater
         %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn updater (raw-store op op-id op-time)
-            let
-                store $ decode-map-as raw-store $ Map Tag Dynamic
-              match op
-                (:states cursor s)
-                  decode-map-as
-                    update-states store
-                      decode-map-as cursor $ List Dynamic
-                      , s
-                    Map Tag Dynamic
-                (:content data) (assoc store :content data)
-                (:result data) (assoc store :result data)
-                (:error-result data) (assoc store :error-result data)
-                (:hydrate-storage data)
-                  decode-map-as data $ Map Tag Dynamic
-                _ store
+          :code $ quote $ defn updater (store op _op-id _op-time)
+            match op $
+              :states cursor data
+              struct-with store $ :states $ decode-map-as
+                update-state-tree (:states store) cursor data
+                Map Dynamic Dynamic
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic Dynamic Dynamic
-            -> $ Map Tag Dynamic
+          :schema $ quote $ Fn app.schema/Store app.schema/Op String Number (-> app.schema/Store)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
-          :require $ respo.cursor :refer $ update-states
+          :require $ respo.cursor :refer $ update-state-tree
