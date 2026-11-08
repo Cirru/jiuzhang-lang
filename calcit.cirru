@@ -385,7 +385,7 @@
                       , &+
                   , new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-call $ %{} 'CodeEntry (:doc |)
@@ -399,7 +399,7 @@
                 (:none)
                   raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" nil
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+          :schema $ quote $ Fn String (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -417,88 +417,84 @@
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-defn $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-defn (raw-body parent-scope stdout)
+          :code $ quote $ defn call-defn (body parent-scope stdout)
             let
-                body $ decode-map-as raw-body $ List Dynamic
+                f-name $ decode-map-as
+                    get body 0
+                    , .unwrap
+                  , 'String
+                f-params $ decode-map-as
+                    get body 1
+                    , .unwrap
+                  List String
+                f-body $ slice body 2
+              when (empty? f-body)
+                raise $ str "|未有函数体"
               let
-                  f-name $ decode-map-as
-                      get body 0
-                      , .unwrap
-                    , 'String
-                  f-params $ decode-map-as
-                      get body 1
-                      , .unwrap
-                    List String
-                  f-body $ slice body 2
-                when (empty? f-body)
-                  raise $ str "|未有函数体"
-                let
-                    f $ fn (& ys)
-                      hint-fn $ Fn & Dynamic $ -> (List Dynamic)
-                      when-not
-                        = (.len ys) (.len f-params)
-                        raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
-                      let
-                          scope $ loop
-                              s parent-scope
-                              params f-params
-                              idx 0
-                            if (empty? params) s $ recur
-                              assoc s
-                                (first params) .unwrap
-                                (get ys idx) .unwrap
-                              rest params
-                              inc idx
-                          scope-inner $ assoc scope f-name f
-                        loop
-                            ret nil
-                            s scope-inner
-                            xs f-body
-                          hint-fn $ Fn Dynamic Dynamic (List Dynamic)
-                            -> $ List Dynamic
-                          if (empty? xs) ([] ret s)
-                            let[] (v s2)
-                              call-expression
-                                  first xs
-                                  , .unwrap
-                                , s stdout
-                              recur v s2 $ rest xs
-                  [] f $ assoc parent-scope f-name f
+                  f $ fn (& ys)
+                    hint-fn $ Fn & Dynamic $ -> (List Dynamic)
+                    when-not
+                      = (.len ys) (.len f-params)
+                      raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
+                    let
+                        scope $ loop
+                            s parent-scope
+                            params f-params
+                            idx 0
+                          if (empty? params) s $ recur
+                            assoc s
+                              (first params) .unwrap
+                              (get ys idx) .unwrap
+                            rest params
+                            inc idx
+                        scope-inner $ assoc scope f-name f
+                      loop
+                          ret nil
+                          s scope-inner
+                          xs f-body
+                        hint-fn $ Fn Dynamic Dynamic (List calcit.core/CirruNode)
+                          -> $ List Dynamic
+                        if (empty? xs) ([] ret s)
+                          let[] (v s2)
+                            call-expression
+                                first xs
+                                , .unwrap
+                              , s stdout
+                            recur v s2 $ rest xs
+                [] f $ assoc parent-scope f-name f
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-divide $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-divide (raw-body scope stdout)
-            let
-                body $ decode-map-as raw-body $ List Dynamic
-              cond
-                  empty? body
-                  [] 1 scope
-                (= 1 (.len body))
-                  let[] (v new-scope)
-                    call-expression
-                        first body
-                        , .unwrap
-                      , scope stdout
-                    []
-                      / 1 $ decode-map-as v 'Number
-                      , new-scope
-                true $ let[] (raw-params new-scope) (extract-params body scope stdout)
+          :code $ quote $ defn call-divide (body scope stdout)
+            cond
+                empty? body
+                [] 1 scope
+              (= 1 (.len body))
+                let[] (v new-scope)
+                  call-expression
+                      first body
+                      , .unwrap
+                    , scope stdout
+                  []
+                    / 1 $ decode-map-as v 'Number
+                    , new-scope
+              true $ let[] (raw-params new-scope) (extract-params body scope stdout)
+                let
+                    params $ decode-map-as raw-params $ List Number
                   let
-                      params $ decode-map-as raw-params $ List Number
-                    let
-                        x0 $
-                          first params
-                          , .unwrap
-                        delta $ let
-                            operands $ rest params
-                          if (empty? operands) 0 $ .foldl (rest operands)
-                            (first operands) .unwrap
-                            , &+
-                      [] (&/ x0 delta) new-scope
+                      x0 $
+                        first params
+                        , .unwrap
+                      delta $ let
+                          operands $ rest params
+                        if (empty? operands) 0 $ .foldl (rest operands)
+                          (first operands) .unwrap
+                          , &+
+                    [] (&/ x0 delta) new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-do $ %{} 'CodeEntry (:doc |)
@@ -507,7 +503,7 @@
                 ret nil
                 s scope
                 xs body
-              hint-fn $ Fn Dynamic Dynamic (List Dynamic)
+              hint-fn $ Fn Dynamic Dynamic (List calcit.core/CirruNode)
                 -> $ List Dynamic
               if (empty? xs) ([] ret s)
                 let[] (v s2)
@@ -517,36 +513,32 @@
                     , s stdout
                   recur v s2 $ rest xs
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-equal $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-equal (raw-xs scope stdout)
-            let
-                xs $ decode-map-as raw-xs $ List Dynamic
-              assert "|\"直\"需二参数" $ = 2 $ .len xs
-              let[] (params new-scope) (extract-params xs scope stdout)
-                []
-                  = (get params 0) (get params 1)
-                  , scope
+          :code $ quote $ defn call-equal (xs scope stdout)
+            assert "|\"直\"需二参数" $ = 2 $ .len xs
+            let[] (params new-scope) (extract-params xs scope stdout)
+              []
+                = (get params 0) (get params 1)
+                , scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-expression $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-expression (expr scope stdout)
-            cond
-                string? expr
-                resolve-literal expr scope stdout
-              (list? expr)
+            match expr
+              (String token) (resolve-literal token scope stdout)
+              (List nodes)
                 let
-                    nodes $ decode-map-as expr $ List calcit.core/CirruNode
                     head $
                       first nodes
                       , .unwrap
                     x1 $ get nodes 1
                     x2 $ get nodes 2
-                    body $ slice expr 1
+                    body $ slice nodes 1
                   match head
                     (String head)
                       match head
@@ -591,116 +583,110 @@
                           true $ raise $ str "|未有术也, 不知" (to-lispy-string head)
                     (List _children)
                       raise $ str "|未有术也, 不知" $ to-lispy-string head
-              true $ raise $ str "|未知几何也" (to-lispy-string expr)
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
+            :features :js-ffi
         'call-filter $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-filter (raw-xs scope stdout)
-            let
-                xs $ decode-map-as raw-xs $ List Dynamic
-              assert "|\"其\"需二参数" $ = 2 $ .len xs
-              let[] (params new-scope) (extract-params xs scope stdout)
-                let
-                    items $
-                      nth params 0
-                      , .unwrap
-                    f $
-                      nth params 1
-                      , .unwrap
-                  if (fn? f)
-                    let
-                        callback $ fn (x)
-                          hint-fn $ Fn Dynamic (-> Bool) (:features :js-ffi)
-                          if
-                              first $ decode-map-as (f x) (List Dynamic)
-                              , .unwrap
-                            , true false
-                      []
-                        cond
-                            list? items
-                            filter items callback
-                          (set? items) (filter items callback)
-                          (map? items) (filter items callback)
-                          true $ raise "|Expected a list, set or map"
-                        , new-scope
-                    raise "|Expected an interpreter function"
+          :code $ quote $ defn call-filter (xs scope stdout)
+            assert "|\"其\"需二参数" $ = 2 $ .len xs
+            let[] (params new-scope) (extract-params xs scope stdout)
+              let
+                  items $
+                    nth params 0
+                    , .unwrap
+                  f $
+                    nth params 1
+                    , .unwrap
+                if (fn? f)
+                  let
+                      callback $ fn (x)
+                        hint-fn $ Fn Dynamic (-> Bool) (:features :js-ffi)
+                        if
+                            first $ decode-map-as (f x) (List Dynamic)
+                            , .unwrap
+                          , true false
+                    []
+                      cond
+                          list? items
+                          filter items callback
+                        (set? items) (filter items callback)
+                        (map? items) (filter items callback)
+                        true $ raise "|Expected a list, set or map"
+                      , new-scope
+                  raise "|Expected an interpreter function"
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-fn $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-fn (raw-body parent-scope stdout)
+          :code $ quote $ defn call-fn (body parent-scope stdout)
             let
-                body $ decode-map-as raw-body $ List Dynamic
-              let
-                  f-params $ decode-map-as
-                      get body 0
-                      , .unwrap
-                    List String
-                  f-body $ slice body 1
-                when (empty? f-body) (raise "|未有函数体")
-                []
-                  fn (& ys)
-                    hint-fn $ Fn & Dynamic $ -> (List Dynamic)
-                    when-not
-                      = (.len ys) (.len f-params)
-                      raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
-                    let
-                        scope $ loop
-                            s parent-scope
-                            params f-params
-                            idx 0
-                          if (empty? params) s $ recur
-                            assoc s
-                              (first params) .unwrap
-                              (get ys idx) .unwrap
-                            rest params
-                            inc idx
-                      loop
-                          ret nil
-                          s scope
-                          xs f-body
-                        hint-fn $ Fn Dynamic Dynamic (List Dynamic)
-                          -> $ List Dynamic
-                        if (empty? xs) ([] ret s)
-                          let[] (v s2)
-                            call-expression
-                                first xs
-                                , .unwrap
-                              , s stdout
-                            recur v s2 $ rest xs
-                  , parent-scope
+                f-params $ decode-map-as
+                    get body 0
+                    , .unwrap
+                  List String
+                f-body $ slice body 1
+              when (empty? f-body) (raise "|未有函数体")
+              []
+                fn (& ys)
+                  hint-fn $ Fn & Dynamic $ -> (List Dynamic)
+                  when-not
+                    = (.len ys) (.len f-params)
+                    raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
+                  let
+                      scope $ loop
+                          s parent-scope
+                          params f-params
+                          idx 0
+                        if (empty? params) s $ recur
+                          assoc s
+                            (first params) .unwrap
+                            (get ys idx) .unwrap
+                          rest params
+                          inc idx
+                    loop
+                        ret nil
+                        s scope
+                        xs f-body
+                      hint-fn $ Fn Dynamic Dynamic (List calcit.core/CirruNode)
+                        -> $ List Dynamic
+                      if (empty? xs) ([] ret s)
+                        let[] (v s2)
+                          call-expression
+                              first xs
+                              , .unwrap
+                            , s stdout
+                          recur v s2 $ rest xs
+                , parent-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-get $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-get (raw-xs scope stdout)
-            let
-                xs $ decode-map-as raw-xs $ List Dynamic
-              assert "|\"取\"需二参数" $ = 2 $ .len xs
-              let[] (params new-scope) (extract-params xs scope stdout)
-                let
-                    target $
-                      nth params 0
-                      , .unwrap
-                    key $
-                      nth params 1
-                      , .unwrap
-                  match (get target key)
-                    (:some value) ([] value new-scope)
-                    (:none) ([] nil new-scope)
+          :code $ quote $ defn call-get (xs scope stdout)
+            assert "|\"取\"需二参数" $ = 2 $ .len xs
+            let[] (params new-scope) (extract-params xs scope stdout)
+              let
+                  target $
+                    nth params 0
+                    , .unwrap
+                  key $
+                    nth params 1
+                    , .unwrap
+                match (get target key)
+                  (:some value) ([] value new-scope)
+                  (:none) ([] nil new-scope)
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-hashmap $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-hashmap (raw-xs scope stdout)
             let
-                xs $ decode-map-as raw-xs $ List (List Dynamic)
+                xs $ decode-map-as raw-xs $ List (List calcit.core/CirruNode)
               []
                 -> xs
                   map $ fn (pair)
@@ -713,7 +699,7 @@
                   pairs-map
                 , scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-host $ %{} 'CodeEntry (:doc |)
@@ -728,111 +714,102 @@
                     [] (f & params) new-scope
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+          :schema $ quote $ Fn String (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-if $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-if (raw-body scope stdout)
+          :code $ quote $ defn call-if (body scope stdout)
+            assert "|\"若\"需传入\"条件\"及\"结果\"" $ >= (.len body) 2
             let
-                body $ decode-map-as raw-body $ List Dynamic
-              assert "|\"若\"需传入\"条件\"及\"结果\"" $ >= (.len body) 2
-              let
-                  condition $
-                    get body 0
-                    , .unwrap
-                  then-part $
-                    get body 1
-                    , .unwrap
-                  else-part $ if
-                    >= (.len body) 3
-                    (get body 2) .unwrap
-                    , nil
-                if
-                    first $ call-expression condition scope stdout
-                    , .unwrap
-                  call-expression then-part scope stdout
-                  if (nil? else-part) ([] nil scope) (call-expression else-part scope stdout)
+                condition $
+                  get body 0
+                  , .unwrap
+                then-part $
+                  get body 1
+                  , .unwrap
+                else-part $ .get body 2
+              if
+                  first $ call-expression condition scope stdout
+                  , .unwrap
+                call-expression then-part scope stdout
+                match else-part
+                  (:some value) (call-expression value scope stdout)
+                  (:none) ([] nil scope)
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-larger $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-larger (raw-xs scope stdout)
-            let
-                xs $ decode-map-as raw-xs $ List Dynamic
-              assert "|\"多于\"需二参数" $ = 2 $ .len xs
-              let[] (params new-scope) (extract-params xs scope stdout)
-                []
-                  >
-                    decode-map-as
-                        get params 0
-                        , .unwrap
-                      , 'Number
-                    decode-map-as
-                        get params 1
-                        , .unwrap
-                      , 'Number
-                  , new-scope
+          :code $ quote $ defn call-larger (xs scope stdout)
+            assert "|\"多于\"需二参数" $ = 2 $ .len xs
+            let[] (params new-scope) (extract-params xs scope stdout)
+              []
+                >
+                  decode-map-as
+                      get params 0
+                      , .unwrap
+                    , 'Number
+                  decode-map-as
+                      get params 1
+                      , .unwrap
+                    , 'Number
+                , new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-littler $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-littler (raw-xs scope stdout)
-            let
-                xs $ decode-map-as raw-xs $ List Dynamic
-              assert "|\"少于\"需二参数" $ = 2 $ .len xs
-              let[] (params new-scope) (extract-params xs scope stdout)
-                []
-                  <
-                    decode-map-as
-                        get params 0
-                        , .unwrap
-                      , 'Number
-                    decode-map-as
-                        get params 1
-                        , .unwrap
-                      , 'Number
-                  , new-scope
+          :code $ quote $ defn call-littler (xs scope stdout)
+            assert "|\"少于\"需二参数" $ = 2 $ .len xs
+            let[] (params new-scope) (extract-params xs scope stdout)
+              []
+                <
+                  decode-map-as
+                      get params 0
+                      , .unwrap
+                    , 'Number
+                  decode-map-as
+                      get params 1
+                      , .unwrap
+                    , 'Number
+                , new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-map $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-map (raw-xs scope stdout)
-            let
-                xs $ decode-map-as raw-xs $ List Dynamic
-              assert "|\"各\"需二参数" $ = 2 $ .len xs
-              let[] (params new-scope) (extract-params xs scope stdout)
-                let
-                    items $
-                      nth params 0
-                      , .unwrap
-                    f $
-                      nth params 1
-                      , .unwrap
-                  if (fn? f)
-                    let
-                        callback $ fn (x)
-                          hint-fn $ Fn Dynamic (-> Dynamic) (:features :js-ffi)
-                          (first (decode-map-as (f x) (List Dynamic)))
-                            , .unwrap
-                      []
-                        cond
-                            list? items
-                            map items callback
-                          (set? items) (map items callback)
-                          (map? items)
-                            map items $ fn (pair)
-                              hint-fn $ Fn (Tuple Dynamic Dynamic)
-                                -> $ Tuple Dynamic Dynamic
-                              decode-map-as (callback pair) (Tuple Dynamic Dynamic)
-                          true $ raise "|Expected a list, set or map"
-                        , new-scope
-                    raise "|Expected an interpreter function"
+          :code $ quote $ defn call-map (xs scope stdout)
+            assert "|\"各\"需二参数" $ = 2 $ .len xs
+            let[] (params new-scope) (extract-params xs scope stdout)
+              let
+                  items $
+                    nth params 0
+                    , .unwrap
+                  f $
+                    nth params 1
+                    , .unwrap
+                if (fn? f)
+                  let
+                      callback $ fn (x)
+                        hint-fn $ Fn Dynamic (-> Dynamic) (:features :js-ffi)
+                        (first (decode-map-as (f x) (List Dynamic)))
+                          , .unwrap
+                    []
+                      cond
+                          list? items
+                          map items callback
+                        (set? items) (map items callback)
+                        (map? items)
+                          map items $ fn (pair)
+                            hint-fn $ Fn (Tuple Dynamic Dynamic)
+                              -> $ Tuple Dynamic Dynamic
+                            decode-map-as (callback pair) (Tuple Dynamic Dynamic)
+                        true $ raise "|Expected a list, set or map"
+                      , new-scope
+                  raise "|Expected an interpreter function"
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -854,41 +831,39 @@
                     .?!apply method obj $ to-js-data args
                     , scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+          :schema $ quote $ Fn String (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-minus $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-minus (raw-body scope stdout)
-            let
-                body $ decode-map-as raw-body $ List Dynamic
-              cond
-                  empty? body
-                  [] 0 scope
-                (= 1 (.len body))
-                  let[] (ret new-scope)
-                    call-expression
-                        first body
-                        , .unwrap
-                      , scope stdout
-                    []
-                      - 0 $ decode-map-as ret 'Number
-                      , new-scope
-                true $ let[] (raw-params new-scope) (extract-params body scope stdout)
+          :code $ quote $ defn call-minus (body scope stdout)
+            cond
+                empty? body
+                [] 0 scope
+              (= 1 (.len body))
+                let[] (ret new-scope)
+                  call-expression
+                      first body
+                      , .unwrap
+                    , scope stdout
+                  []
+                    - 0 $ decode-map-as ret 'Number
+                    , new-scope
+              true $ let[] (raw-params new-scope) (extract-params body scope stdout)
+                let
+                    params $ decode-map-as raw-params $ List Number
                   let
-                      params $ decode-map-as raw-params $ List Number
-                    let
-                        x0 $
-                          first params
-                          , .unwrap
-                        delta $ let
-                            operands $ rest params
-                          if (empty? operands) 0 $ .foldl (rest operands)
-                            (first operands) .unwrap
-                            , &+
-                      [] (- x0 delta) new-scope
+                      x0 $
+                        first params
+                        , .unwrap
+                      delta $ let
+                          operands $ rest params
+                        if (empty? operands) 0 $ .foldl (rest operands)
+                          (first operands) .unwrap
+                          , &+
+                    [] (- x0 delta) new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-multiply $ %{} 'CodeEntry (:doc |)
@@ -904,7 +879,7 @@
                       , &*
                   , new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-native $ %{} 'CodeEntry (:doc |)
@@ -923,27 +898,25 @@
                       [] (.!apply f nil args) new-scope
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic Dynamic
+          :schema $ quote $ Fn String (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'call-native-hashmap $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-native-hashmap (raw-body scope stdout)
-            let
-                body $ decode-map-as raw-body $ List Dynamic
-              if
-                and
-                  = 0 $ &number:rem (.len body) 2
-                  flat-map-structure? body
-                []
-                  let[] (params new-scope) (extract-params body scope stdout)
-                    pairs-map $ chunks
-                      decode-map-as params $ List Dynamic
-                      , 2
-                  , scope
-                raise "|unknown structure for &置"
+          :code $ quote $ defn call-native-hashmap (body scope stdout)
+            if
+              and
+                = 0 $ &number:rem (.len body) 2
+                flat-map-structure? body
+              []
+                let[] (params new-scope) (extract-params body scope stdout)
+                  pairs-map $ chunks
+                    decode-map-as params $ List Dynamic
+                    , 2
+                , scope
+              raise "|unknown structure for &置"
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -954,7 +927,7 @@
                 negate $ decode-map-as v 'Number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-new $ %{} 'CodeEntry (:doc |)
@@ -962,7 +935,7 @@
             let[] (v new-scope) (call-expression x scope stdout)
               [] (new v) new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -971,7 +944,7 @@
             let[] (v new-scope) (call-expression x scope stdout)
               [] (not v) new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-println $ %{} 'CodeEntry (:doc |)
@@ -982,21 +955,19 @@
                 stdout $ join-string (map acc format-value) "| "
                 [] nil scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-require $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-require (raw-xs scope stdout)
-            let
-                xs $ decode-map-as raw-xs $ List Dynamic
-              assert "|\"引\"需一参数" $ = 1 $ .len xs
-              []
-                .?!require js/globalThis $
-                  first xs
-                  , .unwrap
-                , scope
+          :code $ quote $ defn call-require (xs scope stdout)
+            assert "|\"引\"需一参数" $ = 1 $ .len xs
+            []
+              .?!require js/globalThis $
+                first xs
+                , .unwrap
+              , scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -1009,13 +980,13 @@
                   * number number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-vector $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-vector (xs scope stdout) (extract-params xs scope stdout)
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'create-regexp $ %{} 'CodeEntry (:doc |)
@@ -1024,23 +995,21 @@
           :examples $ []
           :schema $ quote $ Fn String (-> app.program/RegexHost) (:features :js-ffi)
         'extract-params $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn extract-params (raw-xs scope stdout)
-            let
-                xs $ decode-map-as raw-xs $ List Dynamic
-              loop
-                  acc $ []
-                  params xs
-                hint-fn $ Fn (List Dynamic) (List Dynamic)
-                  -> $ List Dynamic
-                if (empty? params) ([] acc scope)
-                  let[] (ret new-scope)
-                    call-expression
-                        first params
-                        , .unwrap
-                      , scope stdout
-                    recur (conj acc ret) (rest params)
+          :code $ quote $ defn extract-params (xs scope stdout)
+            loop
+                acc $ []
+                params xs
+              hint-fn $ Fn (List Dynamic) (List calcit.core/CirruNode)
+                -> $ List Dynamic
+              if (empty? params) ([] acc scope)
+                let[] (ret new-scope)
+                  call-expression
+                      first params
+                      , .unwrap
+                    , scope stdout
+                  recur (conj acc ret) (rest params)
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -1120,6 +1089,7 @@
               (:some value) value
               (:none) (raise "|未知几何也 nil")
           :examples $ []
+          :schema $ quote $ Fn (Option calcit.core/CirruNode) (-> calcit.core/CirruNode)
         'resolve-literal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-literal (raw-token scope stdout)
             let
@@ -1151,7 +1121,7 @@
                     , scope
                 true $ raise $ str "|未知几何也" (to-string token)
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic
+          :schema $ quote $ Fn String Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
