@@ -12,15 +12,15 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 
 ### 使用者影响
 
-九章仍是实验原型。使用本轮源码时，请配对 Calcit CLI 和 `@calcit/procs` **0.35.1**，
+九章仍是实验原型。使用本轮源码时，请配对 Calcit CLI 和 `@calcit/procs` **0.37.0**，
 使用 Node 24、Yarn 4.18.0 重新安装依赖并生成 JS。命令行用法、中文语法、运行结果和页面 HUD 沿用原有行为。
 
 解释器用 `CirruNode` union 保留源码节点类型，运行结果明确为二元组（值、输出文本）。
-Map 的「各」仍向回调传入键值对。网页输入、运行和重置使用类型化事件和名义操作。
-宿主函数仍可返回开放的解释器值，原质量门禁保留。
+Map 的「各」仍向回调传入键值对。网页输入、运行和重置使用名义操作，Reel 使用具名 Store 及 `Op | reel.typed/Control`。内部只保留实际发送的状态操作。
+缺席的语法操作数使用 `Option<CirruNode>`。宿主函数仍可返回开放的解释器值，九章的「空」和值查找失败时的结果保持原语义。
 
-正式依赖为 Reel **0.9.2**、Markdown **0.8.1**、UI **0.15.1**、Respo **0.19.4**、
-JS-FFI **0.2.13**，传递依赖 Router **0.12.1**。
+正式依赖为 Reel **0.10.0**、Markdown **0.8.2**、UI **0.15.2**、Respo **0.19.5**、
+JS-FFI **0.2.13**，传递依赖 Router **0.12.2**。
 
 ```bash
 caps --strict --ci
@@ -45,9 +45,8 @@ yarn vite
 `count` 仍是合法通用 API，不据此机械改写任意异构值。本次只迁移真实可明确的关系，
 解释器值仍允许异构，JS 宿主返回值保持开放；不新建编译器 fix/proof 规则。
 
-原质量上限保持 unsafe=0、schemaDynamic=104、unresolved=127、typeNone=0、
-typeNotFull=52、codeNil=23。历史获准的 Map 状态边界预算没有再次放宽；本轮实际值
-schemaDynamic=83、unresolved=106，其他指标不增加。HUD 与未启用自动保存的行为保持，
+质量上限按实测收紧为 unsafe=0、schemaDynamic=71、unresolved=88、typeNone=0、
+typeNotFull=46、codeNil=17。HUD 与未启用自动保存的行为保持，
 不增加真实数据、存档或剪贴板验收操作。原八组断言和三个入口的全部门禁保持。Calcit 0.34.2 的单次 strict workflow 已检查
 全部三个入口，因此 CI 保留一次完整 workflow，去掉两次重复执行；各入口的公开定义和
 dynamic-method 检查仍分别保留。
