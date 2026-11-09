@@ -10,7 +10,7 @@
     :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |js-ffi/
-      :type-slots $ {} $ :dispatch-op 'app.schema/DispatchOp
+      :type-slots $ {} $ :dispatch-op 'app.schema/Op
     :test $ {} (:description |) (:init-fn 'app.test/main!) (:mode :js) (:reload-fn 'app.test/reload!) (:target :node)
       :feature-policy $ {}
       :modules $ []
@@ -44,7 +44,7 @@
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
         'comp-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-container (reel)
+          :code $ quote $ defcomp comp-container (reel on-control)
             let
                 store $ :store reel
                 states $ :states store
@@ -87,10 +87,12 @@
                       {} $ :style $ {}
                       comp-md-safe "|Based on toolchains from [Cirru Project](https://github.com/Cirru/)."
                 if dev?
-                  %:: Option :some $ comp-typed-reel (>> states :reel) reel $ {}
+                  %:: Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control
                   %:: Option :none
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store) (-> respo.schema/Component)
+          :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store)
+            Fn reel.typed/Control $ -> Unit
+            -> respo.schema/Component
         'comp-md-safe $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-md-safe (text)
             comp-md text $ {}
@@ -277,33 +279,16 @@
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
-            match (typed/decode-control op)
-              (:some control) (dispatch-resolved! control)
-              (:none)
-                match op
-                  (:states cursor data)
-                    dispatch-resolved! $ schema/Op :states
-                      decode-map-as cursor $ List respo.schema/CoordKey
-                      , data
-                  _ $ eprintln "|Unknown op:" op
+            reset! *reel $ typed/record-op updater @*reel op (host/random-uuid) (host/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
-        'dispatch-resolved! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch-resolved! (op)
-            hint-fn $ Fn app.schema/ResolvedOp (-> Unit) (:features :js-ffi)
-            reset! *reel $ match op
-              (reel.typed/Control control) (typed/apply-control updater @*reel control)
-              (app.schema/Op action)
-                typed/record-op updater @*reel action (host/random-uuid) (host/now-ms)
-            , &unit
-          :examples $ []
+          :schema $ quote $ Fn app.schema/Op (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
             render-app!
             add-watch! *reel :changes $ fn (reel prev) (render-app!)
-            listen-devtools! |k dispatch!
+            listen-devtools! |k on-control!
             println "|App started."
           :examples $ []
           :schema $ quote $ Fn (-> Unit)
@@ -314,6 +299,12 @@
           :schema $ quote $ Fn
             -> $ JsNullish respo.dom/DomElement
             :features :js-ffi
+        'on-control! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-control! (control)
+            reset! *reel $ typed/apply-control updater @*reel control
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn reel.typed/Control (-> Unit)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if
@@ -329,7 +320,7 @@
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! (mount-target)
-              fn () $ comp-container @*reel
+              fn () $ comp-container @*reel on-control!
               , dispatch!
           :examples $ []
           :schema $ quote $ Fn (-> Unit)
@@ -1157,19 +1148,11 @@
           :require $ |nzh/cn :default nzh
     'app.schema $ %{} 'FileEntry
       :defs $ {}
-        'DispatchOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def DispatchOp (:: :unhandled)
-          :examples $ []
-          :schema $ quote AnyEnum
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :states (List respo.schema/CoordKey) Dynamic
           :examples $ []
           :schema $ quote EnumDef
-        'ResolvedOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defunion ResolvedOp Op reel.typed/Control
-          :examples $ []
-          :schema $ quote UnionDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
             :states $ Map Dynamic Dynamic
