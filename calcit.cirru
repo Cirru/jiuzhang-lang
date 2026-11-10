@@ -35,7 +35,7 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! () (println |TODO)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.cli
           :require
@@ -345,14 +345,14 @@
           :schema $ quote $ Ref String
         'ArrayHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait ArrayHost
-            .push $ Fn ArrayHost Dynamic $ -> Dynamic
+            .push $ Fn ArrayHost Dynamic $ -> Number
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
           :schema $ quote Trait
         'NzhHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait NzhHost
             .encode-s $ Fn NzhHost Number $ -> String
-            .decode-s $ Fn NzhHost String $ -> Dynamic
+            .decode-s $ Fn NzhHost String $ -> Number
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:decode-s |decodeS) (:encode-s |encodeS)
@@ -1187,15 +1187,15 @@
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (run-tests!)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! () (println |Reloaded) (run-tests!)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
         'run-tests! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-tests! () (test-fibo) (test-data) (test-fn) (test-if) (test-list) (test-math) (test-native-api) (test-variables)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
         'test-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-data () (println "|Testing 聚物于列于置")
             is $ = (load-log |data.log) (eval-out |data.cirru)
@@ -1214,37 +1214,37 @@
           :code $ quote $ defn test-fibo () (println "|Testing 菲氏数也")
             is $ = (load-log |fibo.log) (eval-out |fibo.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
         'test-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-fn () (println "|Testing 函数")
             is $ = (load-log |fn.log) (eval-out |fn.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
         'test-if $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-if () (println "|Testing 若判断语句")
             is $ = (load-log |if.log) (eval-out |if.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
         'test-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-list () (println "|Testing 取数于列")
             is $ = (load-log |list.log) (eval-out |list.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
         'test-math $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-math () (println "|Testing 算术")
             is $ = (load-log |variables.log) (eval-out |variables.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
         'test-native-api $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-native-api () (println "|Testing 用平台之函数")
             is $ = (load-log |native-api.log) (eval-out |native-api.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
         'test-variables $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-variables () (println "|Testing 数有其名也")
             is $ = (load-log |math.log) (eval-out |math.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic)
+          :schema $ quote $ Fn (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.test
           :require
