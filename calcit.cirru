@@ -275,14 +275,14 @@
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
-          :schema $ quote $ Ref (reel.typed/State app.schema/Op app.schema/Store)
+          :schema $ quote $ Ref (typed/State schema/Op schema/Store)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
             reset! *reel $ typed/record-op updater @*reel op (host/random-uuid) (host/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn app.schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -304,7 +304,7 @@
             reset! *reel $ typed/apply-control updater @*reel control
             , &unit
           :examples $ []
-          :schema $ quote $ Fn reel.typed/Control (-> Unit)
+          :schema $ quote $ Fn typed/Control (-> Unit)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if
@@ -376,7 +376,7 @@
                       , &+
                   , new-scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-call $ %{} 'CodeEntry (:doc |)
@@ -390,7 +390,7 @@
                 (:none)
                   raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" nil
           :examples $ []
-          :schema $ quote $ Fn String (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn String (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -404,7 +404,7 @@
                 call-expression (.unwrap value-name) scope stdout
                 [] v $ assoc scope (.unwrap var-name) v
           :examples $ []
-          :schema $ quote $ Fn (Option calcit.core/CirruNode) (Option calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (Option CirruNode) (Option CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-defn $ %{} 'CodeEntry (:doc |)
@@ -454,7 +454,7 @@
                             recur v s2 $ rest xs
                 [] f $ assoc parent-scope f-name f
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-divide $ %{} 'CodeEntry (:doc |)
@@ -485,7 +485,7 @@
                           , &+
                     [] (&/ x0 delta) new-scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-do $ %{} 'CodeEntry (:doc |)
@@ -504,7 +504,7 @@
                     , s stdout
                   recur v s2 $ rest xs
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-equal $ %{} 'CodeEntry (:doc |)
@@ -515,7 +515,7 @@
                 = (get params 0) (get params 1)
                 , scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-expression $ %{} 'CodeEntry (:doc |)
@@ -575,7 +575,7 @@
                     (List _children)
                       raise $ str "|未有术也, 不知" $ to-lispy-string head
           :examples $ []
-          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -608,7 +608,7 @@
                       , new-scope
                   raise "|Expected an interpreter function"
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -653,7 +653,7 @@
                           recur v s2 $ rest xs
                 , parent-scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-get $ %{} 'CodeEntry (:doc |)
@@ -671,7 +671,7 @@
                   (:some value) ([] value new-scope)
                   (:none) ([] nil new-scope)
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-hashmap $ %{} 'CodeEntry (:doc |)
@@ -690,7 +690,7 @@
                   pairs-map
                 , scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-host $ %{} 'CodeEntry (:doc |)
@@ -705,7 +705,7 @@
                     [] (f & params) new-scope
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
-          :schema $ quote $ Fn String (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn String (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -728,7 +728,7 @@
                   (:some value) (call-expression value scope stdout)
                   (:none) ([] nil scope)
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-larger $ %{} 'CodeEntry (:doc |)
@@ -747,7 +747,7 @@
                     , 'Number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-littler $ %{} 'CodeEntry (:doc |)
@@ -766,7 +766,7 @@
                     , 'Number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-map $ %{} 'CodeEntry (:doc |)
@@ -800,7 +800,7 @@
                       , new-scope
                   raise "|Expected an interpreter function"
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -822,7 +822,7 @@
                     .?!apply method obj $ to-js-data args
                     , scope
           :examples $ []
-          :schema $ quote $ Fn String (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn String (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -854,7 +854,7 @@
                           , &+
                     [] (- x0 delta) new-scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-multiply $ %{} 'CodeEntry (:doc |)
@@ -870,7 +870,7 @@
                       , &*
                   , new-scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-native $ %{} 'CodeEntry (:doc |)
@@ -889,7 +889,7 @@
                       [] (.!apply f nil args) new-scope
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
-          :schema $ quote $ Fn String (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn String (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -907,7 +907,7 @@
                 , scope
               raise "|unknown structure for &置"
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -918,7 +918,7 @@
                 negate $ decode-map-as v 'Number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-new $ %{} 'CodeEntry (:doc |)
@@ -926,7 +926,7 @@
             let[] (v new-scope) (call-expression x scope stdout)
               [] (new v) new-scope
           :examples $ []
-          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -935,7 +935,7 @@
             let[] (v new-scope) (call-expression x scope stdout)
               [] (not v) new-scope
           :examples $ []
-          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-println $ %{} 'CodeEntry (:doc |)
@@ -946,7 +946,7 @@
                 stdout $ join-string (map acc format-value) "| "
                 [] nil scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-require $ %{} 'CodeEntry (:doc |)
@@ -958,7 +958,7 @@
                 , .unwrap
               , scope
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
@@ -971,20 +971,20 @@
                   * number number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn calcit.core/CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-vector $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-vector (xs scope stdout) (extract-params xs scope stdout)
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
         'create-regexp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-regexp (pattern)
             js-cast (new js/RegExp pattern) 'app.program/RegexHost
           :examples $ []
-          :schema $ quote $ Fn String (-> app.program/RegexHost) (:features :js-ffi)
+          :schema $ quote $ Fn String (-> RegexHost) (:features :js-ffi)
         'extract-params $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-params (xs scope stdout)
             loop
@@ -1000,29 +1000,30 @@
                     , scope stdout
                   recur (conj acc ret) (rest params)
           :examples $ []
-          :schema $ quote $ Fn (List calcit.core/CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
             -> $ List Dynamic
             :features :js-ffi
         'flat-map-structure? $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn flat-map-structure? (raw-xs)
+          :code $ quote $ defn flat-map-structure? (xs)
             let
-                xs $ decode-map-as raw-xs $ List Dynamic
-              let
-                  size $ .len xs
-                if
-                  = 0 $ &number:rem size 2
-                  let
-                      n $ bit-shr size 1
-                    -> (range n)
-                      every? $ fn (i)
-                        match
-                          get xs $ * 2 i
-                          (:some x) (string? x)
-                          (:none) false
-                  , false
+                size $ .len xs
+              if
+                = 0 $ &number:rem size 2
+                let
+                    n $ bit-shr size 1
+                  -> (range n)
+                    every? $ fn (i)
+                      match
+                        get xs $ * 2 i
+                        (:some x)
+                          match x
+                            (String _) true
+                            (List _) false
+                        (:none) false
+                , false
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn (List CirruNode) (-> Bool)
         'format-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn format-value (x)
             cond
@@ -1061,7 +1062,7 @@
         'number-pattern $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def number-pattern (create-regexp "|[一二两三四五六七八九零十百千万亿负点]+")
           :examples $ []
-          :schema $ quote app.program/RegexHost
+          :schema $ quote RegexHost
         'read-native-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-native-fn (o xs) (; println "|取" xs)
             if (empty? xs) o $ if (nil? o)
@@ -1080,7 +1081,7 @@
               (:some value) value
               (:none) (raise "|未知几何也 nil")
           :examples $ []
-          :schema $ quote $ Fn (Option calcit.core/CirruNode) (-> calcit.core/CirruNode)
+          :schema $ quote $ Fn (Option CirruNode) (-> CirruNode)
         'resolve-literal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-literal (raw-token scope stdout)
             let
@@ -1162,7 +1163,7 @@
           :code $ quote $ def store
             Store :states $ {}
           :examples $ []
-          :schema $ quote app.schema/Store
+          :schema $ quote Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.test $ %{} 'FileEntry

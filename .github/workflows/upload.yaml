@@ -50,8 +50,7 @@ jobs:
           calcit analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
           calcit --entry test analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
           calcit --entry cli analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
-          calcit analyze weak-types --only deprecated-call --format json | jq -e '.data.summary.calls == 0'
-          calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
+          bash scripts/check-calcit-quality.sh
           calcit calcit.cirru --entry test js
           node test.mjs
           calcit calcit.cirru --entry cli js
