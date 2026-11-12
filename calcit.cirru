@@ -102,22 +102,22 @@
           :code $ quote $ defcomp comp-runner (states title code0)
             let
                 cursor $ decode-map-as
-                    get states :cursor
+                    &map:get states :cursor
                     , .unwrap-or $ []
                   List respo.schema/CoordKey
                 state $ decode-map-as
-                    get states :data
+                    &map:get states :data
                     , .unwrap-or $ {} (:code code0) (:result "|按 \"点击按钮运行\"") (:error |)
                   Map Tag Dynamic
                 code $ decode-map-as
-                    get state :code
+                    &map:get state :code
                     , .unwrap-or code0
                   , 'String
                 raw-error $
-                  get state :error
+                  &map:get state :error
                   , .unwrap-or |
                 raw-result $
-                  get state :result
+                  &map:get state :result
                   , .unwrap-or |
                 error $ if (nil? raw-error) | $ decode-map-as raw-error 'String
                 result $ if (nil? raw-result) | $ decode-map-as raw-result 'String
@@ -443,7 +443,7 @@
                           ret nil
                           s scope-inner
                           xs f-body
-                        hint-fn $ Fn Dynamic Dynamic (List calcit.core/CirruNode)
+                        hint-fn $ Fn Dynamic Dynamic (List CirruNode)
                           -> $ List Dynamic
                         if (empty? xs) ([] ret s)
                           let[] (v s2)
@@ -494,7 +494,7 @@
                 ret nil
                 s scope
                 xs body
-              hint-fn $ Fn Dynamic Dynamic (List calcit.core/CirruNode)
+              hint-fn $ Fn Dynamic Dynamic (List CirruNode)
                 -> $ List Dynamic
               if (empty? xs) ([] ret s)
                 let[] (v s2)
@@ -642,7 +642,7 @@
                         ret nil
                         s scope
                         xs f-body
-                      hint-fn $ Fn Dynamic Dynamic (List calcit.core/CirruNode)
+                      hint-fn $ Fn Dynamic Dynamic (List CirruNode)
                         -> $ List Dynamic
                       if (empty? xs) ([] ret s)
                         let[] (v s2)
@@ -940,11 +940,9 @@
             -> $ List Dynamic
         'call-println $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-println (xs scope stdout)
-            let[] (raw-acc scope) (extract-params xs scope stdout)
-              let
-                  acc $ decode-map-as raw-acc $ List Dynamic
-                stdout $ join-string (map acc format-value) "| "
-                [] nil scope
+            let[] (acc scope) (extract-params xs scope stdout)
+              stdout $ join-string (map acc format-value) "| "
+              [] nil scope
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
@@ -975,7 +973,8 @@
             Fn String $ -> Unit
             -> $ List Dynamic
         'call-vector $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-vector (xs scope stdout) (extract-params xs scope stdout)
+          :code $ quote $ defn call-vector (xs scope stdout)
+            let[] (values next-scope) (extract-params xs scope stdout) ([] values next-scope)
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) Dynamic
             Fn String $ -> Unit
@@ -987,22 +986,23 @@
           :schema $ quote $ Fn String (-> RegexHost) (:features :js-ffi)
         'extract-params $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-params (xs scope stdout)
-            loop
-                acc $ []
-                params xs
-              hint-fn $ Fn (List Dynamic) (List calcit.core/CirruNode)
-                -> $ List Dynamic
-              if (empty? params) ([] acc scope)
-                let[] (ret new-scope)
-                  call-expression
-                      first params
-                      , .unwrap
-                    , scope stdout
-                  recur (conj acc ret) (rest params)
+            let
+                values $ loop
+                    acc $ []
+                    params xs
+                  hint-fn $ Fn (List Dynamic) (List CirruNode)
+                    -> $ List Dynamic
+                  if (empty? params) acc $ let[] (ret _)
+                    call-expression
+                      .unwrap $ first params
+                      , scope stdout
+                    recur (conj acc ret) (rest params)
+              [] values scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) Scope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple (List Dynamic) Scope
+            :generics Scope
             :features :js-ffi
         'flat-map-structure? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn flat-map-structure? (xs)
@@ -1076,7 +1076,7 @@
           :schema $ quote $ Fn Dynamic (List String) (-> Dynamic) (:features :js-ffi)
         'require-operand $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn require-operand (operand)
-            hint-fn $ Fn (Option calcit.core/CirruNode) (-> calcit.core/CirruNode)
+            hint-fn $ Fn (Option CirruNode) (-> CirruNode)
             match operand
               (:some value) value
               (:none) (raise "|未知几何也 nil")
@@ -1131,7 +1131,7 @@
                     ret nil
                     scope $ {}
                     xs instructions
-                  hint-fn $ Fn Dynamic Dynamic (List calcit.core/CirruNode)
+                  hint-fn $ Fn Dynamic Dynamic (List CirruNode)
                     -> $ Tuple Dynamic String
                   if (empty? xs) ([] ret @*stdout-logs)
                     let[] (r next-scope)
