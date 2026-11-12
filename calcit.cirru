@@ -31,11 +31,11 @@
                 do (println "|No file name") (exit! 1)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! () (println |TODO)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.cli
           :require
@@ -93,6 +93,7 @@
           :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
+            :features :io :state
         'comp-md-safe $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-md-safe (text)
             comp-md text $ {}
@@ -105,22 +106,23 @@
                     &map:get states :cursor
                     , .unwrap-or $ []
                   List respo.schema/CoordKey
-                state $ decode-map-as
+                raw-state $ decode-map-as
                     &map:get states :data
                     , .unwrap-or $ {} (:code code0) (:result "|按 \"点击按钮运行\"") (:error |)
                   Map Tag Dynamic
                 code $ decode-map-as
-                    &map:get state :code
+                    &map:get raw-state :code
                     , .unwrap-or code0
                   , 'String
                 raw-error $
-                  &map:get state :error
+                  &map:get raw-state :error
                   , .unwrap-or |
                 raw-result $
-                  &map:get state :result
+                  &map:get raw-state :result
                   , .unwrap-or |
                 error $ if (nil? raw-error) | $ decode-map-as raw-error 'String
                 result $ if (nil? raw-result) | $ decode-map-as raw-result 'String
+                state $ {} (:code code) (:result result) (:error error)
               [] (effect-codearea)
                 div
                   {} $ :style $ {} (:margin "|80px 0")
@@ -175,7 +177,7 @@
                         :style $ {} $ :background-color :transparent
                         :inner-text result
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States String String (-> respo.schema/Component) (:features :js-ffi)
+          :schema $ quote $ Fn respo.schema/States String String (-> respo.schema/Component) (:features :io :js-ffi :state)
         'effect-codearea $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-codearea () (action el)
             update-codearea! (decode-map-as action 'Tag) (element-host el)
@@ -265,7 +267,7 @@
                 , &newline
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.counting
           :require (|fs :as fs)
@@ -282,7 +284,7 @@
             reset! *reel $ typed/record-op updater @*reel op (host/random-uuid) (host/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :io :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -291,7 +293,7 @@
             listen-devtools! |k on-control!
             println "|App started."
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
             .query-selector (js-cast js/document 'respo.dom/DomDocument) |.app
@@ -304,7 +306,7 @@
             reset! *reel $ typed/apply-control updater @*reel control
             , &unit
           :examples $ []
-          :schema $ quote $ Fn typed/Control (-> Unit)
+          :schema $ quote $ Fn typed/Control (-> Unit) (:features :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if
@@ -316,14 +318,14 @@
                 println "|Code updated."
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! (mount-target)
               fn () $ comp-container @*reel on-control!
               , dispatch!
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
@@ -1143,7 +1145,7 @@
           :examples $ []
           :schema $ quote $ Fn String
             -> $ Tuple Dynamic String
-            :features :js-ffi
+            :features :js-ffi :state
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.program
           :require $ |nzh/cn :default nzh
@@ -1151,7 +1153,7 @@
       :defs $ {}
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states (List respo.schema/CoordKey) Dynamic
+            :states (List respo.schema/CoordKey) (Map Tag String)
           :examples $ []
           :schema $ quote EnumDef
         'Store $ %{} 'CodeEntry (:doc |)
@@ -1177,7 +1179,7 @@
               let[] (ret logs) (run-program source)
                 trim $ decode-map-as logs 'String
           :examples $ []
-          :schema $ quote $ Fn String (-> String) (:features :js-ffi)
+          :schema $ quote $ Fn String (-> String) (:features :js-ffi :state)
         'load-log $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn load-log (x)
             trim $ decode-map-as
@@ -1188,15 +1190,15 @@
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (run-tests!)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! () (println |Reloaded) (run-tests!)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'run-tests! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-tests! () (test-fibo) (test-data) (test-fn) (test-if) (test-list) (test-math) (test-native-api) (test-variables)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'test-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-data () (println "|Testing 聚物于列于置")
             is $ = (load-log |data.log) (eval-out |data.cirru)
@@ -1210,42 +1212,42 @@
             is $ = false $ .test chinese-pattern "|甲\n"
             is $ = false $ .test chinese-pattern "|甲乙A"
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'test-fibo $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-fibo () (println "|Testing 菲氏数也")
             is $ = (load-log |fibo.log) (eval-out |fibo.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'test-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-fn () (println "|Testing 函数")
             is $ = (load-log |fn.log) (eval-out |fn.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'test-if $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-if () (println "|Testing 若判断语句")
             is $ = (load-log |if.log) (eval-out |if.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'test-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-list () (println "|Testing 取数于列")
             is $ = (load-log |list.log) (eval-out |list.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'test-math $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-math () (println "|Testing 算术")
             is $ = (load-log |variables.log) (eval-out |variables.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'test-native-api $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-native-api () (println "|Testing 用平台之函数")
             is $ = (load-log |native-api.log) (eval-out |native-api.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'test-variables $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-variables () (println "|Testing 数有其名也")
             is $ = (load-log |math.log) (eval-out |math.cirru)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.test
           :require
