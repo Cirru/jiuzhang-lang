@@ -472,7 +472,10 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple
+              Fn (& Dynamic)
+                -> $ Tuple Dynamic EvalScope
+              , EvalScope
         'call-divide $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-divide (body scope stdout)
             cond
@@ -672,7 +675,10 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple
+              Fn (& Dynamic)
+                -> $ Tuple Dynamic EvalScope
+              , EvalScope
         'call-get $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-get (xs scope stdout)
             assert "|\"取\"需二参数" $ = 2 $ .len xs
