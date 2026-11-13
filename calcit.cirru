@@ -931,7 +931,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple (Map Dynamic Dynamic) EvalScope
             :features :js-ffi
         'call-negate $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-negate (x scope stdout)
