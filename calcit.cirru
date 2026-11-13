@@ -708,7 +708,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple (Map Dynamic Dynamic) EvalScope
         'call-host $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-host (raw-head body scope stdout)
             let
@@ -962,7 +962,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Nil EvalScope
         'call-require $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-require (xs scope stdout)
             assert "|\"引\"需一参数" $ = 1 $ .len xs
@@ -987,14 +987,14 @@
           :examples $ []
           :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Number EvalScope
         'call-vector $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-vector (xs scope stdout)
             let[] (values next-scope) (extract-params xs scope stdout) ([] values next-scope)
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple (List Dynamic) EvalScope
         'create-regexp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-regexp (pattern)
             js-cast (new js/RegExp pattern) 'app.program/RegexHost
