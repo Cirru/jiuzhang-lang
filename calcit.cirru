@@ -1085,35 +1085,31 @@
           :examples $ []
           :schema $ quote $ Fn (Option CirruNode) (-> CirruNode)
         'resolve-literal $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn resolve-literal (raw-token scope stdout)
-            let
-                token $ decode-map-as raw-token 'String
-              ; println "|reading literal" token scope
-              cond
-                  =
-                      first token
-                      , .unwrap-or |
-                    , ||
-                  [] (slice token 1) scope
-                (= ((first token) .unwrap-or |) |:)
-                  [] (slice token 1) scope
-                (starts-with? token |js/)
-                  []
-                    read-native-fn js/globalThis $ split (slice token 3) |.
-                    , scope
-                (= token "|实") ([] true scope)
-                (= token "|虚") ([] false scope)
-                (= token "|空") ([] nil scope)
-                (.test number-pattern token)
-                  let
-                      value $ .decode-s (js-cast nzh 'NzhHost)
-                        &str:replace (assert-type token String) "|两" "|二"
-                    [] value scope
-                (contains? scope token)
-                  []
-                    .unwrap $ get scope token
-                    , scope
-                true $ raise $ str "|未知几何也" (to-string token)
+          :code $ quote $ defn resolve-literal (token scope stdout)
+            cond
+                =
+                    first token
+                    , .unwrap-or |
+                  , ||
+                [] (slice token 1) scope
+              (= ((first token) .unwrap-or |) |:)
+                [] (slice token 1) scope
+              (starts-with? token |js/)
+                []
+                  read-native-fn js/globalThis $ split (slice token 3) |.
+                  , scope
+              (= token "|实") ([] true scope)
+              (= token "|虚") ([] false scope)
+              (= token "|空") ([] nil scope)
+              (.test number-pattern token)
+                let
+                    value $ .decode-s (js-cast nzh 'NzhHost) (&str:replace token "|两" "|二")
+                  [] value scope
+              (contains? scope token)
+                []
+                  .unwrap $ get scope token
+                  , scope
+              true $ raise $ str "|未知几何也" (to-string token)
           :examples $ []
           :schema $ quote $ Fn String Dynamic
             Fn String $ -> Unit
