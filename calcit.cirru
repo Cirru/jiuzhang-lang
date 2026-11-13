@@ -351,6 +351,12 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
           :schema $ quote Trait
+        'EvalScope $ %{} 'CodeEntry
+          :doc "|Bindings can hold interpreted values and host objects."
+          :code $ quote $ defstruct EvalScope
+            :bindings $ Map String Dynamic
+          :examples $ []
+          :schema $ quote StructDef
         'NzhHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait NzhHost
             .encode-s $ Fn NzhHost Number $ -> String
@@ -365,6 +371,11 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
           :schema $ quote Trait
+        'bind-value $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn bind-value (scope name value)
+            struct-with scope $ :bindings $ assoc (:bindings scope) name value
+          :examples $ []
+          :schema $ quote $ Fn EvalScope String Value (-> EvalScope) (:generics Value)
         'call-add $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-add (xs scope stdout)
             let[] (raw-params new-scope) (extract-params xs scope stdout)
@@ -378,23 +389,24 @@
                       , &+
                   , new-scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Number EvalScope
         'call-call $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-call (head body scope stdout)
             let[] (params new-scope) (extract-params body scope stdout)
-              match (get scope head)
+              match
+                get (:bindings scope) head
                 (:some f)
                   if (fn? f)
-                    decode-map-as (f & params) (List Dynamic)
+                    decode-map-as (f & params) (Tuple Dynamic EvalScope)
                     raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" f
                 (:none)
                   raise $ str "|未有法也, 得" (to-lispy-string head) "|乃" nil
           :examples $ []
-          :schema $ quote $ Fn String (List CirruNode) Dynamic
+          :schema $ quote $ Fn String (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'call-define $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-define (var-name value-name scope stdout)
@@ -404,11 +416,13 @@
               (.none? value-name) (raise "|未知实也")
               true $ let[] (v new-scope)
                 call-expression (.unwrap value-name) scope stdout
-                [] v $ assoc scope (.unwrap var-name) v
+                [] v $ bind-value scope
+                  decode-map-as (.unwrap var-name) String
+                  , v
           :examples $ []
-          :schema $ quote $ Fn (Option CirruNode) (Option CirruNode) Dynamic
+          :schema $ quote $ Fn (Option CirruNode) (Option CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
         'call-defn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-defn (body parent-scope stdout)
             let
@@ -425,7 +439,7 @@
                 raise $ str "|未有函数体"
               let
                   f $ fn (& ys)
-                    hint-fn $ Fn & Dynamic $ -> (List Dynamic)
+                    hint-fn $ Fn & Dynamic $ -> (Tuple Dynamic EvalScope)
                     when-not
                       = (.len ys) (.len f-params)
                       raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
@@ -435,18 +449,18 @@
                             params f-params
                             idx 0
                           if (empty? params) s $ recur
-                            assoc s
+                            bind-value s
                               (first params) .unwrap
                               (get ys idx) .unwrap
                             rest params
                             inc idx
-                        scope-inner $ assoc scope f-name f
+                        scope-inner $ bind-value scope f-name f
                       loop
                           ret nil
                           s scope-inner
                           xs f-body
-                        hint-fn $ Fn Dynamic Dynamic (List CirruNode)
-                          -> $ List Dynamic
+                        hint-fn $ Fn Dynamic EvalScope (List CirruNode)
+                          -> $ Tuple Dynamic EvalScope
                         if (empty? xs) ([] ret s)
                           let[] (v s2)
                             call-expression
@@ -454,11 +468,14 @@
                                 , .unwrap
                               , s stdout
                             recur v s2 $ rest xs
-                [] f $ assoc parent-scope f-name f
+                [] f $ bind-value parent-scope f-name f
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple
+              Fn (& Dynamic)
+                -> $ Tuple Dynamic EvalScope
+              , EvalScope
         'call-divide $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-divide (body scope stdout)
             cond
@@ -487,17 +504,17 @@
                           , &+
                     [] (&/ x0 delta) new-scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Number EvalScope
         'call-do $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-do (body scope stdout)
             loop
                 ret nil
                 s scope
                 xs body
-              hint-fn $ Fn Dynamic Dynamic (List CirruNode)
-                -> $ List Dynamic
+              hint-fn $ Fn Dynamic EvalScope (List CirruNode)
+                -> $ Tuple Dynamic EvalScope
               if (empty? xs) ([] ret s)
                 let[] (v s2)
                   call-expression
@@ -506,9 +523,9 @@
                     , s stdout
                   recur v s2 $ rest xs
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
         'call-equal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-equal (xs scope stdout)
             assert "|\"直\"需二参数" $ = 2 $ .len xs
@@ -517,9 +534,9 @@
                 = (get params 0) (get params 1)
                 , scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Bool EvalScope
         'call-expression $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-expression (expr scope stdout)
             match expr
@@ -572,14 +589,15 @@
                             call-method head body scope stdout
                           (starts-with? head |js/) (call-native head body scope stdout)
                           (starts-with? head |clj/) (call-host head body scope stdout)
-                          (contains? scope head) (call-call head body scope stdout)
+                          (contains? (:bindings scope) head)
+                            call-call head body scope stdout
                           true $ raise $ str "|未有术也, 不知" (to-lispy-string head)
                     (List _children)
                       raise $ str "|未有术也, 不知" $ to-lispy-string head
           :examples $ []
-          :schema $ quote $ Fn CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'call-filter $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-filter (xs scope stdout)
@@ -610,9 +628,9 @@
                       , new-scope
                   raise "|Expected an interpreter function"
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'call-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-fn (body parent-scope stdout)
@@ -625,7 +643,7 @@
               when (empty? f-body) (raise "|未有函数体")
               []
                 fn (& ys)
-                  hint-fn $ Fn & Dynamic $ -> (List Dynamic)
+                  hint-fn $ Fn & Dynamic $ -> (Tuple Dynamic EvalScope)
                   when-not
                     = (.len ys) (.len f-params)
                     raise $ str "|长度未相符" (to-lispy-string ys) (to-lispy-string f-params)
@@ -635,7 +653,7 @@
                           params f-params
                           idx 0
                         if (empty? params) s $ recur
-                          assoc s
+                          bind-value s
                             (first params) .unwrap
                             (get ys idx) .unwrap
                           rest params
@@ -644,8 +662,8 @@
                         ret nil
                         s scope
                         xs f-body
-                      hint-fn $ Fn Dynamic Dynamic (List CirruNode)
-                        -> $ List Dynamic
+                      hint-fn $ Fn Dynamic EvalScope (List CirruNode)
+                        -> $ Tuple Dynamic EvalScope
                       if (empty? xs) ([] ret s)
                         let[] (v s2)
                           call-expression
@@ -655,9 +673,12 @@
                           recur v s2 $ rest xs
                 , parent-scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple
+              Fn (& Dynamic)
+                -> $ Tuple Dynamic EvalScope
+              , EvalScope
         'call-get $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-get (xs scope stdout)
             assert "|\"取\"需二参数" $ = 2 $ .len xs
@@ -673,9 +694,9 @@
                   (:some value) ([] value new-scope)
                   (:none) ([] nil new-scope)
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
         'call-hashmap $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-hashmap (raw-xs scope stdout)
             let
@@ -687,14 +708,13 @@
                       = 2 $ .len pair
                       raise $ str "|Invalid length" (.len pair) |of $ to-lispy-string pair
                     -> pair $ map $ fn (x)
-                      (first (call-expression x scope stdout))
-                        , .unwrap
+                      let[] (value _) (call-expression x scope stdout) value
                   pairs-map
                 , scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple (Map Dynamic Dynamic) EvalScope
         'call-host $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-host (raw-head body scope stdout)
             let
@@ -704,12 +724,14 @@
                     method $ slice head 4
                     f $ match method ("|九章->js" to-js-data) ("|js->九章" to-cirru-edn) (_ nil)
                   if (fn? f)
-                    [] (f & params) new-scope
+                    let
+                        value $ f & params
+                      [] value new-scope
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
-          :schema $ quote $ Fn String (List CirruNode) Dynamic
+          :schema $ quote $ Fn String (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'call-if $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-if (body scope stdout)
@@ -722,17 +744,15 @@
                   get body 1
                   , .unwrap
                 else-part $ .get body 2
-              if
-                  first $ call-expression condition scope stdout
-                  , .unwrap
-                call-expression then-part scope stdout
+                evaluated $ call-expression condition scope stdout
+              let[] (value _) evaluated $ if value (call-expression then-part scope stdout)
                 match else-part
                   (:some value) (call-expression value scope stdout)
                   (:none) ([] nil scope)
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
         'call-larger $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-larger (xs scope stdout)
             assert "|\"多于\"需二参数" $ = 2 $ .len xs
@@ -749,9 +769,9 @@
                     , 'Number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Bool EvalScope
         'call-littler $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-littler (xs scope stdout)
             assert "|\"少于\"需二参数" $ = 2 $ .len xs
@@ -768,9 +788,9 @@
                     , 'Number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Bool EvalScope
         'call-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-map (xs scope stdout)
             assert "|\"各\"需二参数" $ = 2 $ .len xs
@@ -802,9 +822,9 @@
                       , new-scope
                   raise "|Expected an interpreter function"
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'call-method $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-method (raw-head body scope stdout)
@@ -824,9 +844,9 @@
                     .?!apply method obj $ to-js-data args
                     , scope
           :examples $ []
-          :schema $ quote $ Fn String (List CirruNode) Dynamic
+          :schema $ quote $ Fn String (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'call-minus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-minus (body scope stdout)
@@ -856,9 +876,9 @@
                           , &+
                     [] (- x0 delta) new-scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Number EvalScope
         'call-multiply $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-multiply (xs scope stdout)
             let[] (raw-params new-scope) (extract-params xs scope stdout)
@@ -872,9 +892,9 @@
                       , &*
                   , new-scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Number EvalScope
         'call-native $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-native (raw-head body scope stdout)
             let
@@ -891,9 +911,9 @@
                       [] (.!apply f nil args) new-scope
                     raise $ str "|不知其术: " head "| " $ to-lispy-string f
           :examples $ []
-          :schema $ quote $ Fn String (List CirruNode) Dynamic
+          :schema $ quote $ Fn String (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'call-native-hashmap $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-native-hashmap (body scope stdout)
@@ -909,9 +929,9 @@
                 , scope
               raise "|unknown structure for &置"
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple (Map Dynamic Dynamic) EvalScope
             :features :js-ffi
         'call-negate $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-negate (x scope stdout)
@@ -920,35 +940,35 @@
                 negate $ decode-map-as v 'Number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Number EvalScope
         'call-new $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-new (x scope stdout)
             let[] (v new-scope) (call-expression x scope stdout)
               [] (new v) new-scope
           :examples $ []
-          :schema $ quote $ Fn CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'call-not $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-not (x scope stdout)
             let[] (v new-scope) (call-expression x scope stdout)
               [] (not v) new-scope
           :examples $ []
-          :schema $ quote $ Fn CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Bool EvalScope
         'call-println $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-println (xs scope stdout)
             let[] (acc scope) (extract-params xs scope stdout)
               stdout $ join-string (map acc format-value) "| "
               [] nil scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Nil EvalScope
         'call-require $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-require (xs scope stdout)
             assert "|\"引\"需一参数" $ = 1 $ .len xs
@@ -958,9 +978,9 @@
                 , .unwrap
               , scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'call-self-multiply $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-self-multiply (x scope stdout)
@@ -971,16 +991,16 @@
                   * number number
                 , new-scope
           :examples $ []
-          :schema $ quote $ Fn CirruNode Dynamic
+          :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Number EvalScope
         'call-vector $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-vector (xs scope stdout)
             let[] (values next-scope) (extract-params xs scope stdout) ([] values next-scope)
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Dynamic
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple (List Dynamic) EvalScope
         'create-regexp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-regexp (pattern)
             js-cast (new js/RegExp pattern) 'app.program/RegexHost
@@ -1001,10 +1021,9 @@
                     recur (conj acc ret) (rest params)
               [] values scope
           :examples $ []
-          :schema $ quote $ Fn (List CirruNode) Scope
+          :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple (List Dynamic) Scope
-            :generics Scope
+            -> $ Tuple (List Dynamic) EvalScope
             :features :js-ffi
         'flat-map-structure? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn flat-map-structure? (xs)
@@ -1053,14 +1072,14 @@
                   , "|)"
               (fn? x)
                 str "|(术 " (to-lispy-string x) "|)"
-              (= x true) "|实"
-              (= x false) "|虚"
+              (&= x true) "|实"
+              (&= x false) "|虚"
               (nil? x) "|空"
               (tag? x) (to-string x)
               (symbol? x) (to-string x)
               true $ to-lispy-string x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> String) (:features :js-ffi)
+          :schema $ quote $ Fn Value (-> String) (:generics Value) (:features :js-ffi)
         'number-pattern $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def number-pattern (create-regexp "|[一二两三四五六七八九零十百千万亿负点]+")
           :examples $ []
@@ -1105,15 +1124,15 @@
                 let
                     value $ .decode-s (js-cast nzh 'NzhHost) (&str:replace token "|两" "|二")
                   [] value scope
-              (contains? scope token)
+              (contains? (:bindings scope) token)
                 []
-                  .unwrap $ get scope token
+                  .unwrap $ get (:bindings scope) token
                   , scope
               true $ raise $ str "|未知几何也" (to-string token)
           :examples $ []
-          :schema $ quote $ Fn String Dynamic
+          :schema $ quote $ Fn String EvalScope
             Fn String $ -> Unit
-            -> $ List Dynamic
+            -> $ Tuple Dynamic EvalScope
             :features :js-ffi
         'run-program $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-program (source)
@@ -1127,9 +1146,9 @@
               if (empty? instructions) ([] nil |)
                 loop
                     ret nil
-                    scope $ {}
+                    scope $ EvalScope :bindings $ {}
                     xs instructions
-                  hint-fn $ Fn Dynamic Dynamic (List CirruNode)
+                  hint-fn $ Fn Dynamic EvalScope (List CirruNode)
                     -> $ Tuple Dynamic String
                   if (empty? xs) ([] ret @*stdout-logs)
                     let[] (r next-scope)
