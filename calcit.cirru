@@ -391,7 +391,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Number EvalScope
         'call-call $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-call (head body scope stdout)
             let[] (params new-scope) (extract-params body scope stdout)
@@ -503,7 +503,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Number EvalScope
         'call-do $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-do (body scope stdout)
             loop
@@ -533,7 +533,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Bool EvalScope
         'call-expression $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-expression (expr scope stdout)
             match expr
@@ -765,7 +765,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Bool EvalScope
         'call-littler $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-littler (xs scope stdout)
             assert "|\"少于\"需二参数" $ = 2 $ .len xs
@@ -784,7 +784,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Bool EvalScope
         'call-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-map (xs scope stdout)
             assert "|\"各\"需二参数" $ = 2 $ .len xs
@@ -872,7 +872,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Number EvalScope
         'call-multiply $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-multiply (xs scope stdout)
             let[] (raw-params new-scope) (extract-params xs scope stdout)
@@ -888,7 +888,7 @@
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Number EvalScope
         'call-native $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-native (raw-head body scope stdout)
             let
@@ -936,7 +936,7 @@
           :examples $ []
           :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Number EvalScope
         'call-new $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-new (x scope stdout)
             let[] (v new-scope) (call-expression x scope stdout)
@@ -953,7 +953,7 @@
           :examples $ []
           :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple Bool EvalScope
         'call-println $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-println (xs scope stdout)
             let[] (acc scope) (extract-params xs scope stdout)
