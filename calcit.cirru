@@ -1072,14 +1072,14 @@
                   , "|)"
               (fn? x)
                 str "|(术 " (to-lispy-string x) "|)"
-              (= x true) "|实"
-              (= x false) "|虚"
+              (&= x true) "|实"
+              (&= x false) "|虚"
               (nil? x) "|空"
               (tag? x) (to-string x)
               (symbol? x) (to-string x)
               true $ to-lispy-string x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> String) (:features :js-ffi)
+          :schema $ quote $ Fn Value (-> String) (:generics Value) (:features :js-ffi)
         'number-pattern $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def number-pattern (create-regexp "|[一二两三四五六七八九零十百千万亿负点]+")
           :examples $ []
