@@ -702,14 +702,15 @@
             let
                 xs $ decode-map-as raw-xs $ List (List calcit.core/CirruNode)
               []
-                -> xs
-                  map $ fn (pair)
+                foldl xs ({})
+                  fn (entries pair)
                     when-not
                       = 2 $ .len pair
                       raise $ str "|Invalid length" (.len pair) |of $ to-lispy-string pair
-                    -> pair $ map $ fn (x)
-                      let[] (value _) (call-expression x scope stdout) value
-                  pairs-map
+                    let[] (key-node value-node)
+                      decode-map-as pair $ Tuple calcit.core/CirruNode calcit.core/CirruNode
+                      let[] (key _) (call-expression key-node scope stdout)
+                        let[] (value _) (call-expression value-node scope stdout) (assoc entries key value)
                 , scope
           :examples $ []
           :schema $ quote $ Fn (List CirruNode) EvalScope
