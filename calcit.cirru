@@ -951,7 +951,7 @@
           :examples $ []
           :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
-            -> $ Tuple Dynamic EvalScope
+            -> $ Tuple JsObject EvalScope
             :features :js-ffi
         'call-not $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-not (x scope stdout)
