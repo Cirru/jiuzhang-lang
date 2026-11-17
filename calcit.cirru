@@ -91,14 +91,14 @@
                   %:: Option :none
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store)
-            Fn reel.typed/Control $ -> Unit
+            Fn reel.typed/Control (-> Unit) (:features :state)
             -> respo.schema/Component
-            :features :io :state
+            :features :io :js-ffi :state
         'comp-md-safe $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-md-safe (text)
             comp-md text $ {}
           :examples $ []
-          :schema $ quote $ Fn String (-> respo.schema/Component)
+          :schema $ quote $ Fn String (-> respo.schema/Component) (:features :state)
         'comp-runner $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-runner (states title code0)
             let
