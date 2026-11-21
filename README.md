@@ -19,8 +19,8 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 Map 的「各」仍向回调传入键值对。网页输入、运行和重置使用名义操作，Reel 使用具名 Store 及 `Op | reel.typed/Control`。内部只保留实际发送的状态操作。
 缺席的语法操作数使用 `Option<CirruNode>`。宿主函数仍可返回开放的解释器值，九章的「空」和值查找失败时的结果保持原语义。
 
-正式依赖为 Reel **0.11.4**、Markdown **0.9.4**、UI **0.15.6**、Respo **0.19.12**、
-JS-FFI **0.2.18**，传递依赖 Router **0.12.10**。
+正式依赖为 Reel **0.11.5**、Markdown **0.9.5**、UI **0.15.7**、Respo **0.19.13**、
+JS-FFI **0.2.19**，传递依赖 Router **0.12.11**。
 
 ```bash
 caps --strict --ci
