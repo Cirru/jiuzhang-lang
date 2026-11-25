@@ -12,15 +12,15 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 
 ### 使用者影响
 
-九章仍是实验原型。使用本轮源码时，请配对 Calcit CLI 和 `@calcit/procs` **0.45.0**，
+九章仍是实验原型。使用本轮源码时，请配对 Calcit CLI 和 `@calcit/procs` **0.45.1**，
 使用 Node 24、Yarn 4.18.0 重新安装依赖并生成 JS。命令行用法、中文语法、运行结果和页面 HUD 沿用原有行为。
 
 解释器在求值分派、参数列表和闭包函数体中保留 `CirruNode` union，并分别处理文本与列表节点。运行结果为二元组（值、输出文本）。
 Map 的「各」仍向回调传入键值对。网页输入、运行和重置使用名义操作，Reel 使用具名 Store 及 `Op | reel.typed/Control`。内部只保留实际发送的状态操作。
 缺席的语法操作数使用 `Option<CirruNode>`。宿主函数仍可返回开放的解释器值，九章的「空」和值查找失败时的结果保持原语义。
 
-正式依赖为 Reel **0.11.8**、Markdown **0.9.8**、UI **0.16.4**、Respo **0.19.17**、
-JS-FFI **0.2.23**，传递依赖 Router **0.12.16**。
+正式依赖为 Reel **0.11.9**、Markdown **0.9.9**、UI **0.16.5**、Respo **0.19.18**、
+JS-FFI **0.2.24**，传递依赖 Router **0.12.17**。
 
 ```bash
 caps --strict --ci
