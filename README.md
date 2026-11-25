@@ -12,6 +12,8 @@ Originals https://zh.m.wikisource.org/zh-hans/九章算術 .
 
 ### 使用者影响
 
+解释器对宿主返回的 `Unit` 恢复旧的假值行为；`nil`、`false` 仍为假，数字 0 与空字符串仍为真。
+
 九章仍是实验原型。使用本轮源码时，请配对 Calcit CLI 和 `@calcit/procs` **0.45.1**，
 使用 Node 24、Yarn 4.18.0 重新安装依赖并生成 JS。命令行用法、中文语法、运行结果和页面 HUD 沿用原有行为。
 
