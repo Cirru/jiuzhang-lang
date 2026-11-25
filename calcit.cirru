@@ -1082,15 +1082,18 @@
           :examples $ []
           :schema $ quote $ Fn Value (-> String) (:generics Value) (:features :js-ffi)
         'legacy-truthy? $ %{} 'CodeEntry
-          :doc "|Interpreter values follow the historical rule: only nil and false are false."
+          :doc "|Legacy conditions treat nil, Unit and false as false; all other values remain true."
           :code $ quote $ defn legacy-truthy? (value)
-            not $ or (nil? value) (identical? false value)
+            if (bool? value) value $ not $ or (nil? value)
+              = (type-of value) :unit
           :examples $ []
           :schema $ quote $ Fn T (-> Bool) (:generics T)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-values)
             :code $ quote $ do
               assert= false $ legacy-truthy? nil
+              assert= false $ legacy-truthy? &unit
               assert= false $ legacy-truthy? false
+              assert= true $ legacy-truthy? true
               assert= true $ legacy-truthy? 0
               assert= true $ legacy-truthy? |
             :tags $ #{} :unit
