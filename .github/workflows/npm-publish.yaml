@@ -33,7 +33,7 @@ jobs:
         with:
           deps-file: deps.cirru
           tools: calcit,caps
-          caps-version: "0.1.1"
+          caps-version: "0.1.2"
 
       - name: Validate and build CLI
         run: |

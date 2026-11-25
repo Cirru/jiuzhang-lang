@@ -29,11 +29,11 @@ jobs:
           corepack enable
           corepack prepare yarn@4.18.0 --activate
 
-      - uses: calcit-lang/setup-calcit@v1.5.0
+      - uses: calcit-lang/setup-calcit@v1.5.2
         with:
           deps-file: deps.cirru
           tools: calcit,caps
-          caps-version: "0.1.1"
+          caps-version: "0.1.2"
 
       - name: Validate and build
         run: |

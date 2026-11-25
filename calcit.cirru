@@ -614,10 +614,8 @@
                   let
                       callback $ fn (x)
                         hint-fn $ Fn Dynamic (-> Bool) (:features :js-ffi)
-                        if
-                            first $ decode-map-as (f x) (List Dynamic)
-                            , .unwrap
-                          , true false
+                        legacy-truthy? $ .unwrap $ first
+                          decode-map-as (f x) (List Dynamic)
                     []
                       cond
                           list? items
@@ -746,7 +744,7 @@
                   , .unwrap
                 else-part $ .get body 2
                 evaluated $ call-expression condition scope stdout
-              let[] (value _) evaluated $ if value (call-expression then-part scope stdout)
+              let[] (value _) evaluated $ if (legacy-truthy? value) (call-expression then-part scope stdout)
                 match else-part
                   (:some value) (call-expression value scope stdout)
                   (:none) ([] nil scope)
@@ -956,7 +954,9 @@
         'call-not $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-not (x scope stdout)
             let[] (v new-scope) (call-expression x scope stdout)
-              [] (not v) new-scope
+              []
+                not $ legacy-truthy? v
+                , new-scope
           :examples $ []
           :schema $ quote $ Fn CirruNode EvalScope
             Fn String $ -> Unit
@@ -1081,6 +1081,19 @@
               true $ to-lispy-string x
           :examples $ []
           :schema $ quote $ Fn Value (-> String) (:generics Value) (:features :js-ffi)
+        'legacy-truthy? $ %{} 'CodeEntry
+          :doc "|Interpreter values follow the historical rule: only nil and false are false."
+          :code $ quote $ defn legacy-truthy? (value)
+            not $ or (nil? value) (identical? false value)
+          :examples $ []
+          :schema $ quote $ Fn T (-> Bool) (:generics T)
+          :tests $ [] $ %{} 'TestEntry (:name |legacy-values)
+            :code $ quote $ do
+              assert= false $ legacy-truthy? nil
+              assert= false $ legacy-truthy? false
+              assert= true $ legacy-truthy? 0
+              assert= true $ legacy-truthy? |
+            :tags $ #{} :unit
         'number-pattern $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def number-pattern (create-regexp "|[一二两三四五六七八九零十百千万亿负点]+")
           :examples $ []
