@@ -1267,7 +1267,7 @@
           :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'test-math $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn test-math () (println "|Testing 算术")
-            is $ = (load-log |variables.log) (eval-out |variables.cirru)
+            is $ = (load-log |math.log) (eval-out |math.cirru)
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'test-native-api $ %{} 'CodeEntry (:doc |)
