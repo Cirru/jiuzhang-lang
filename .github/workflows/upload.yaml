@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload and verify frontend resources
         if: steps.cos-credentials.outputs.available == 'true'
-        uses: worktools/cos-upload-action@v1.2.0
+        uses: worktools/cos-upload-action@v1.3.0
         timeout-minutes: 10
         with:
           source-dir: dist
